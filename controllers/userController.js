@@ -58,6 +58,7 @@ exports.user_signup_post = [
                     lastname: req.body.lastname,
                     username: req.body.username,
                     password: hashedPassword,
+                    provider: "local",
                     joinDate: new Date(),
                 });
 
@@ -68,9 +69,104 @@ exports.user_signup_post = [
                     });
                 } else {
                     await user.save();
+                    res.status(201);
                     res.json({ message: "Sign up was successful!" });
                 }
             }
         });
     }),
 ];
+
+exports.user_login_post = [
+    body("username")
+        .trim()
+        .escape()
+        .notEmpty()
+        .withMessage("You must enter a username")
+        .custom(async (value, { req, res }) => {
+            const userExists = await User.findOne({
+                username: value,
+            }).exec();
+
+            if (!userExists) {
+                throw new Error("User does not exist");
+            }
+        }),
+    body("password", "The password must not be empty")
+        .trim()
+        .escape()
+        .notEmpty(),
+
+    asyncHandler(async (req, res, next) => {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            res.status(401).json({
+                errors: errors.array({ onlyFirstError: true }),
+            });
+        }
+        // req, res, next at the end or else passport authenticate will hang
+        // passport local authentication. set session to false as I will use a jsonwebtoken instead
+        passport.authenticate(
+            "local",
+            { session: false },
+            (err, user, info) => {
+                if (err || !user) {
+                    // set status to 401 (unauthorized) and send the error message as a json object
+                    res.status(401).json(info);
+                } else {
+                    req.login(user, { session: false }, (err) => {
+                        if (err) {
+                            res.send(err);
+                        }
+
+                        const token = jwt.sign(
+                            { user },
+                            process.env.JWT_SECRET,
+                            { expiresIn: "1d" }
+                        );
+                        res.json({ token });
+                    });
+                }
+            }
+        )(req, res, next);
+    }),
+];
+
+// facebook login
+exports.user_facebook_login_get = asyncHandler((req, res, next) => {
+    passport.authenticate("facebook", (err, user, info) => {
+        if (err) {
+            console.log(err);
+        }
+    })(req, res, next);
+});
+
+// after an attempt to login on facebook's website, the user is sent back here
+exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
+    passport.authenticate(
+        "facebook",
+        {
+            session: false,
+            failureRedirect: "/api/facebook-login",
+            // email scope didn't work. was supposed to get email address
+            // scope: ["email"],
+        },
+        (err, user, info) => {
+            if (err || !user) {
+                res.status(401).json(info);
+            } else {
+                // login the user with passport js, and then create and send a jwt
+                req.login(user, { session: false }, (err) => {
+                    if (err) {
+                        res.send(err);
+                    }
+                    const token = jwt.sign({ user }, process.env.JWT_SECRET, {
+                        expiresIn: "1d",
+                    });
+                    res.json({ token });
+                });
+            }
+        }
+    )(req, res, next);
+});
