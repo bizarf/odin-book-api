@@ -1,16 +1,19 @@
-const index = require("../routes/index");
-
-const request = require("supertest");
-const express = require("express");
-const app = express();
-
-app.use(express.urlencoded({ extended: false }));
-app.use("/", index);
+const supertest = require("supertest");
+const app = require("../app");
+const request = supertest(app);
 
 describe("index route tests", () => {
-    it("returns welcome message", (done) => {
-        request(app)
+    it("/ redirects to /api", (done) => {
+        request
             .get("/")
+            .expect("Content-Type", "text/plain; charset=utf-8")
+            .expect("Location", "/api")
+            .expect(302, done);
+    });
+
+    it("returns welcome message", (done) => {
+        request
+            .get("/api")
             .expect("Content-Type", /json/)
             .expect({ message: "Welcome to the API" })
             .expect(200, done);

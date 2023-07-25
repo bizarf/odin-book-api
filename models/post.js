@@ -3,10 +3,12 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const PostSchema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
+    user: { type: Schema.Types.ObjectId, ref: "User" },
     postContent: { type: String, required: true },
     timestamp: { type: Date },
-    likes: { type: Number },
+    likes: { type: Number, default: 0 },
+    likedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    edited: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Post", PostSchema);

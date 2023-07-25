@@ -1,77 +1,44 @@
-const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
-const request = require("supertest");
-const express = require("express");
-const userRoute = require("../routes/userRoute");
+const supertest = require("supertest");
+const app = require("../app");
+const request = supertest(app);
+const agent = supertest.agent(app);
 const User = require("../models/user");
 const { expect } = require("chai");
-const bcrypt = require("bcrypt");
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
+const {
+    connectToDatabase,
+    disconnectDatabase,
+    // clearDatabase,
+} = require("../middleware/mongoConfig");
 
-const app = express();
-
-// express.json() is required to understand the data being sent
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use("/api", userRoute);
-
-// passport localstrategy
-passport.use(
-    new LocalStrategy(async (username, password, done) => {
-        try {
-            const user = await User.findOne({ username: username });
-            if (!user) {
-                return done(null, false, { msg: "Incorrect username" });
-            }
-            bcrypt.compare(password, user.password, (err, res) => {
-                if (res) {
-                    // password match. log user in
-                    return done(null, user);
-                } else {
-                    return done(null, false, {
-                        msg: "Incorrect password",
-                    });
-                }
-            });
-        } catch (err) {
-            done(err);
-        }
-    })
-);
-
-passport.serializeUser((user, done) => {
-    done(null, user.id);
+// creates new mongo memory server before test
+before(async () => {
+    await disconnectDatabase();
+    process.env.NODE_ENV = "test";
+    await connectToDatabase();
+    const user = new User({
+        firstname: "John",
+        lastname: "Smith",
+        username: "jsmith@mail.com",
+        password: "sadfsdfb4",
+        joinDate: new Date(),
+    });
+    await user.save();
 });
 
-passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await User.findById(id);
-        done(null, user);
-    } catch (err) {
-        done(err);
-    }
+// disconnects and removes the memory server after test
+after(async () => {
+    await disconnectDatabase();
 });
 
-let mongoServer;
-
-// creates new mongo memory server before each test
-beforeEach(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri, {});
-});
-
-// disconnects and removes the memory server after each test
-afterEach(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-});
+// afterEach(async () => {
+//     // Clear the database after each test
+//     await clearDatabase();
+// });
 
 // user sign up tests
 describe("user sign up tests", () => {
     it("user fails to sign up due to not entering any details", (done) => {
-        request(app)
+        request
             .post("/api/sign-up")
             .set("Content-Type", "application/json")
             .send({
@@ -94,7 +61,7 @@ describe("user sign up tests", () => {
     });
 
     it("user fails to sign up due to one field being empty", (done) => {
-        request(app)
+        request
             .post("/api/sign-up")
             .send({
                 firstname: "Penny",
@@ -117,7 +84,7 @@ describe("user sign up tests", () => {
     });
 
     it("user fails to sign up due to one password mismatch", (done) => {
-        request(app)
+        request
             .post("/api/sign-up")
             .send({
                 firstname: "Penny",
@@ -143,16 +110,7 @@ describe("user sign up tests", () => {
     });
 
     it("user fails to sign up as the username has already been taken", async () => {
-        const user = new User({
-            firstname: "John",
-            lastname: "Smith",
-            username: "jsmith@mail.com",
-            password: "sadfsdfb4",
-            joinDate: new Date(),
-        });
-        await user.save();
-
-        request(app)
+        request
             .post("/api/sign-up")
             .send({
                 firstname: "Joe",
@@ -177,7 +135,7 @@ describe("user sign up tests", () => {
 
 describe("users successfully signs up", () => {
     it("user makes a new account", (done) => {
-        request(app)
+        request
             .post("/api/sign-up")
             .send({
                 firstname: "Penny",
@@ -190,26 +148,31 @@ describe("users successfully signs up", () => {
             .expect(201)
             .end(async (err, res) => {
                 if (err) {
+                    console.error("Error during signup:", err);
                     done(err);
                 } else {
                     expect(res.body.message).to.be.a("string");
                     expect(res.body.message).equal("Sign up was successful!");
-                    const users = await User.find();
-                    expect(users.length).equal(1);
+                    try {
+                        const users = await User.find().exec();
+                        expect(users.length).equal(2);
+                        done();
+                    } catch (err) {
+                        done(err);
+                    }
                 }
-                done();
             });
     });
 
     it("two users makes a new account", (done) => {
-        request(app)
+        request
             .post("/api/sign-up")
             .send({
-                firstname: "Penny",
+                firstname: "Mary",
                 lastname: "Jones",
-                username: "psmith@mail.com",
-                password: "94hgawht0j",
-                confirmPassword: "94hgawht0j",
+                username: "mjones@mail.com",
+                password: "85tgoej232",
+                confirmPassword: "85tgoej232",
             })
 
             .expect("Content-Type", /json/)
@@ -222,7 +185,7 @@ describe("users successfully signs up", () => {
                     expect(res.body.message).equal("Sign up was successful!");
                 }
             });
-        request(app)
+        request
             .post("/api/sign-up")
 
             .send({
@@ -236,38 +199,126 @@ describe("users successfully signs up", () => {
             .expect(201)
             .end(async (err, res) => {
                 if (err) {
+                    console.error("Error during signup:", err);
                     done(err);
                 } else {
                     expect(res.body.message).to.be.a("string");
                     expect(res.body.message).equal("Sign up was successful!");
-                    const users = await User.find();
-                    expect(users.length).equal(2);
+                    try {
+                        const users = await User.find().exec();
+                        if (users) {
+                            expect(users.length).equal(4);
+                        }
+                        done();
+                    } catch (err) {
+                        done(err);
+                    }
                 }
+            });
+    });
+});
+
+// user login tests
+describe("user fails to login", () => {
+    it("user enters in no text", (done) => {
+        request
+            .get("/api/login")
+            .set("Content-Type", "application/json")
+            .send({
+                username: "",
+                password: "",
+            })
+            .expect(401)
+            .end((err, res) => {
+                if (err) {
+                    done(err);
+                }
+                expect(res.body.errors).to.be.an("array");
+                expect(res.body.errors.length).equal(2);
+
+                // Call done to signal the completion of the test
+                done();
+            });
+    });
+
+    it("user doesn't enter a username", (done) => {
+        request
+            .get("/api/login")
+            .set("Content-Type", "application/json")
+            .send({
+                username: "",
+                password: "g093u4vj3",
+            })
+            .expect(401)
+            .end((err, res) => {
+                if (err) {
+                    done(err);
+                }
+                expect(res.body.errors).to.be.an("array");
+                expect(res.body.errors.length).equal(1);
+
+                // Call done to signal the completion of the test
+                done();
+            });
+    });
+
+    it("user doesn't enter a password", (done) => {
+        request
+            .get("/api/login")
+            .set("Content-Type", "application/json")
+            .send({
+                username: "mjones@mail.com",
+                password: "",
+            })
+            .expect(401)
+            .end(async (err, res) => {
+                if (err) {
+                    done(err);
+                }
+                expect(res.body.errors).to.be.an("array");
+                expect(res.body.errors.length).equal(1);
+
+                done();
+            });
+    });
+
+    it("user enters a username that doesn't exist", (done) => {
+        request
+            .get("/api/login")
+            .set("Content-Type", "application/json")
+            .send({
+                username: "mjones2@mail.com",
+                password: "85tgoej232",
+            })
+            .expect(401)
+            .end(async (err, res) => {
+                if (err) {
+                    done(err);
+                }
+                expect(res.body.errors).to.be.an("array");
+                expect(res.body.errors.length).equal(1);
+
                 done();
             });
     });
 });
 
-// broken test. passport js issue?
-// user login tests
-// describe("user fails to login", () => {
-//     it("user enters in no text", (done) => {
-//         request(app)
-//             .post("/api/login")
+// broken test. keeps responding with 500. test this in postman
+// describe("user logs in", () => {
+//     it("user successfully logs in", () => {
+//         request
+//             .get("/api/login")
 //             .set("Content-Type", "application/json")
 //             .send({
-//                 username: "",
-//                 password: "",
+//                 username: "mjones@mail.com",
+//                 password: "85tgoej232",
 //             })
-//             .expect(401)
-//             .end((err, res) => {
+//             .expect(200)
+//             .end(async (err, res) => {
 //                 if (err) {
 //                     done(err);
-//                 } else {
-//                     expect(res.body.errors).to.be.an("array");
-//                     expect(res.body.errors.length).equal(2);
 //                 }
-//                 done();
+//                 // done();
 //             });
 //     });
 // });

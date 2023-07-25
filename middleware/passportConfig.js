@@ -69,7 +69,7 @@ passport.use(
             try {
                 // check if the user exists in the database
                 const user = await User.findOne({
-                    facebookId: profile.id,
+                    username: profile.id,
                     provider: profile.provider,
                 });
 

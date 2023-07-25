@@ -77,7 +77,7 @@ exports.user_signup_post = [
     }),
 ];
 
-exports.user_login_post = [
+exports.user_login_get = [
     body("username")
         .trim()
         .escape()
@@ -101,35 +101,37 @@ exports.user_login_post = [
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            res.status(401).json({
+            res.status(401);
+            res.json({
                 errors: errors.array({ onlyFirstError: true }),
             });
-        }
-        // req, res, next at the end or else passport authenticate will hang
-        // passport local authentication. set session to false as I will use a jsonwebtoken instead
-        passport.authenticate(
-            "local",
-            { session: false },
-            (err, user, info) => {
-                if (err || !user) {
-                    // set status to 401 (unauthorized) and send the error message as a json object
-                    res.status(401).json(info);
-                } else {
-                    req.login(user, { session: false }, (err) => {
-                        if (err) {
-                            res.send(err);
-                        }
+        } else {
+            // req, res, next at the end or else passport authenticate will hang
+            // passport local authentication. set session to false as I will use a jsonwebtoken instead
+            passport.authenticate(
+                "local",
+                { session: false },
+                (err, user, info) => {
+                    if (err || !user) {
+                        // set status to 401 (unauthorized) and send the error message as a json object
+                        res.status(401).json(info);
+                    } else {
+                        req.login(user, { session: false }, (err) => {
+                            if (err) {
+                                res.send(err);
+                            }
 
-                        const token = jwt.sign(
-                            { user },
-                            process.env.JWT_SECRET,
-                            { expiresIn: "1d" }
-                        );
-                        res.json({ token });
-                    });
+                            const token = jwt.sign(
+                                { user },
+                                process.env.JWT_SECRET,
+                                { expiresIn: "1d" }
+                            );
+                            res.json({ token });
+                        });
+                    }
                 }
-            }
-        )(req, res, next);
+            )(req, res, next);
+        }
     }),
 ];
 

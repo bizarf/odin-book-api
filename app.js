@@ -6,6 +6,7 @@ const logger = require("morgan");
 const cors = require("cors");
 const compression = require("compression");
 const helmet = require("helmet");
+const { connectToDatabase } = require("./middleware/mongoConfig");
 
 // route imports
 const indexRouter = require("./routes/index");
@@ -17,10 +18,11 @@ const friendsRouter = require("./routes/friendsRoute");
 const app = express();
 
 // dotenv init
-require("dotenv").config();
-require("./middleware/mongoConfig");
-// passport js strategies
-require("./middleware/passportConfig");
+// require("dotenv").config();
+
+connectToDatabase().then(() => {
+    console.log("Connected to the database");
+});
 
 app.use(logger("dev"));
 app.use(express.json());
