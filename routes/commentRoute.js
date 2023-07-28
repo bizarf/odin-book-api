@@ -12,21 +12,21 @@ router.post(
 
 // edit comment PUT
 router.put(
-    "/post/:id/commentId/edit",
+    "/post/:id/comments/:commentId",
     passport.authenticate("jwt", { session: false }),
     commentController.comment_edit_put
 );
 
-// comment like PUT
+// comment like toggle PUT
 router.put(
-    "/post/:id/commentId/like",
+    "/post/:id/comments/:commentId/like",
     passport.authenticate("jwt", { session: false }),
-    commentController.comment_like_put
+    commentController.comment_like_toggle_put
 );
 
 // DELETE comment
 router.delete(
-    "/post/:id/commentId",
+    "/post/:id/comments/:commentId",
     passport.authenticate("jwt", { session: false }),
     commentController.comment_delete
 );

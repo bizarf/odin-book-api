@@ -24,11 +24,18 @@ router.put(
     postController.post_edit_put
 );
 
-// post like PUT
+// post delete DELETE
+router.delete(
+    "/post/:id",
+    passport.authenticate("jwt", { session: false }),
+    postController.post_remove_delete
+);
+
+// post like toggle PUT
 router.put(
     "/post/:id/like",
     passport.authenticate("jwt", { session: false }),
-    postController.post_like_put
+    postController.post_toggle_put
 );
 
 // all posts GET

@@ -25,7 +25,7 @@ router.get(
 
 // post method for sending friend requests
 router.post(
-    "/send-friend-request",
+    "/send-friend-request/:friendId",
     passport.authenticate(
         "jwt",
         { session: false },
@@ -35,7 +35,7 @@ router.post(
 
 // accept friend request
 router.put(
-    "/friend-request-accept",
+    "/friend-request-accept/:friendId",
     passport.authenticate(
         "jwt",
         { session: false },
@@ -45,7 +45,7 @@ router.put(
 
 // reject friend request
 router.put(
-    "/friend-request-reject",
+    "/friend-request-reject/:friendId",
     passport.authenticate(
         "jwt",
         { session: false },
@@ -55,7 +55,7 @@ router.put(
 
 // unfriend DELETE
 router.delete(
-    "/unfriend",
+    "/unfriend/:friendId",
     passport.authenticate(
         "jwt",
         { session: false },

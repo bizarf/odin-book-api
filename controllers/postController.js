@@ -26,9 +26,15 @@ exports.post_create_post = [
         } else {
             const save = await post.save();
             if (save) {
-                res.status(201).json({ message: "Post was successfully made" });
+                res.status(201).json({
+                    success: true,
+                    message: "Post was successfully made",
+                });
             } else {
-                res.status(422).json({ message: "Something went wrong" });
+                res.status(500).json({
+                    success: false,
+                    message: "Failed to save post",
+                });
             }
         }
     }),
@@ -49,7 +55,10 @@ exports.post_edit_put = [
 
         // make sure the post exists first
         if (!post) {
-            res.status(400).json({ error: "The post does not exist" });
+            res.status(404).json({
+                success: false,
+                message: "The post does not exist",
+            });
         }
 
         const updatedPost = new Post({
@@ -72,10 +81,14 @@ exports.post_edit_put = [
             );
             if (save) {
                 res.status(200).json({
+                    success: true,
                     message: "Post was successfully edited",
                 });
             } else {
-                res.status(422).json({ message: "Something went wrong" });
+                res.status(500).json({
+                    success: false,
+                    message: "Failed to save post",
+                });
             }
         }
     }),
@@ -86,21 +99,27 @@ exports.post_remove_delete = asyncHandler(async (req, res, next) => {
     const post = await Post.findById(req.params.id).exec();
 
     if (!req.user._id === post.user._id) {
-        res.status(401).json({ error: "You are not authorized to do that" });
+        res.status(401).json({
+            success: false,
+            message: "You are not authorized to do that",
+        });
     }
 
     if (post === null) {
-        res.status(404).json({ error: "Post not found" });
+        res.status(404).json({ success: false, message: "Post not found" });
     } else {
-        const comments = Comment.find({ postId: req.params.id });
+        const comments = await Comment.find({ postId: req.params.id });
         if (comments) {
             await Comment.deleteMany({ postId: req.params.id });
         }
         const deletedPost = await Post.findByIdAndDelete(req.params.id);
         if (deletedPost) {
-            res.json({ message: "Post successfully deleted" });
+            res.json({ success: true, message: "Post successfully deleted" });
         } else {
-            res.status(422).json({ error: "Something went wrong" });
+            res.status(500).json({
+                success: false,
+                message: "Failed to delete post",
+            });
         }
     }
 });
@@ -110,15 +129,26 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
     const page = req.query.page || 0;
     const postsPerPage = 10;
 
-    // count total number of posts for pagination buttons
-    const totalPostsCount = await Post.countDocuments().exec();
     // pagination feature: skip tells mongoose how many documents to skip, and limit will limit the number of documents that are returned
-    const allPosts = await Post.find()
-        .sort({ timestamp: -1 })
-        .skip(page * postsPerPage)
-        .limit(postsPerPage)
-        .exec();
-    res.json({ totalPostsCount, allPosts });
+    const timeline = await Post.aggregate([
+        {
+            $match: {
+                $or: [{ user: req.user._id }, { user: { $in: user.friends } }],
+            },
+        },
+        { $sort: { timestamp: -1 } },
+        { $count: "totalPosts" },
+        { $skip: page * postsPerPage },
+        { $limit: postsPerPage },
+    ]);
+    if (timeline) {
+        res.json({ success: true, timeline });
+    } else {
+        res.status(500).json({
+            success: false,
+            message: "Could not fetch posts",
+        });
+    }
 });
 
 // single post get
@@ -126,13 +156,51 @@ exports.post_single_get = asyncHandler(async (req, res, next) => {
     const post = await Post.findById(req.params.id).populate("user").exec();
 
     if (post === null) {
-        res.status(404).json({ error: "Post not found" });
+        res.status(404).json({ success: false, message: "Post not found" });
     } else {
         res.json(post);
     }
 });
 
 // post like PUT
-exports.post_like_put = asyncHandler(async (req, res, next) => {
-    res.send("placeholder");
+exports.post_toggle_put = asyncHandler(async (req, res, next) => {
+    const post = await Post.findById(req.params.id).exec();
+
+    if (post === null) {
+        res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    const likedByCheck = post.likedBy.filter((id) => id === req.user._id);
+
+    if (likedByCheck.length === 1 && likedByCheck[0] === req.user_id) {
+        // user removes a like to the post
+        const removeLike = await Post.findByIdAndUpdate(req.params.id, {
+            $inc: { likes: -1 },
+            $pull: { likedBy: req.user._id },
+        });
+
+        if (removeLike) {
+            res.json({ success: true, message: "Like removed from post" });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: "Failed to remove like",
+            });
+        }
+    } else {
+        // user adds a like to the post
+        const addLike = await Post.findByIdAndUpdate(req.params.id, {
+            $inc: { likes: 1 },
+            $addToSet: { likedBy: req.user._id },
+        });
+
+        if (addLike) {
+            res.json({ success: true, message: "Like added to post" });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: "Failed to add like",
+            });
+        }
+    }
 });
