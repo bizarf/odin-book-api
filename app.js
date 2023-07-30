@@ -6,7 +6,6 @@ const logger = require("morgan");
 const cors = require("cors");
 const compression = require("compression");
 const helmet = require("helmet");
-const { connectToDatabase } = require("./middleware/mongoConfig");
 
 // route imports
 const indexRouter = require("./routes/index");
@@ -18,7 +17,11 @@ const friendsRouter = require("./routes/friendsRoute");
 const app = express();
 
 // dotenv init
-// require("dotenv").config();
+require("dotenv").config();
+// require the passport js stuff after dotenv init or else env variables won't be read
+require("./middleware/passportConfig");
+// require connect function after dotenv init or else env variables won't be read
+const { connectToDatabase } = require("./middleware/mongoConfig");
 
 connectToDatabase().then(() => {
     console.log("Connected to the database");

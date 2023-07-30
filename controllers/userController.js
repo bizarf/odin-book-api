@@ -124,7 +124,7 @@ exports.user_login_get = [
                             const token = jwt.sign(
                                 { user },
                                 process.env.JWT_SECRET,
-                                { expiresIn: "1d" }
+                                { expiresIn: "30d" }
                             );
                             res.json({ token });
                         });
@@ -164,7 +164,7 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
                         res.send(err);
                     }
                     const token = jwt.sign({ user }, process.env.JWT_SECRET, {
-                        expiresIn: "1d",
+                        expiresIn: "30d",
                     });
                     res.json({ token });
                 });

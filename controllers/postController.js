@@ -114,7 +114,10 @@ exports.post_remove_delete = asyncHandler(async (req, res, next) => {
         }
         const deletedPost = await Post.findByIdAndDelete(req.params.id);
         if (deletedPost) {
-            res.json({ success: true, message: "Post successfully deleted" });
+            res.status(204).json({
+                success: true,
+                message: "Post successfully deleted",
+            });
         } else {
             res.status(500).json({
                 success: false,
@@ -133,7 +136,10 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
     const timeline = await Post.aggregate([
         {
             $match: {
-                $or: [{ user: req.user._id }, { user: { $in: user.friends } }],
+                $or: [
+                    { user: req.user._id },
+                    { user: { $in: req.user.friends } },
+                ],
             },
         },
         { $sort: { timestamp: -1 } },
@@ -144,7 +150,7 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
     if (timeline) {
         res.json({ success: true, timeline });
     } else {
-        res.status(500).json({
+        res.status(404).json({
             success: false,
             message: "Could not fetch posts",
         });

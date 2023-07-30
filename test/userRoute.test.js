@@ -1,7 +1,6 @@
 const supertest = require("supertest");
 const app = require("../app");
 const request = supertest(app);
-const agent = supertest.agent(app);
 const User = require("../models/user");
 const { expect } = require("chai");
 const {
@@ -14,15 +13,7 @@ const {
 before(async () => {
     await disconnectDatabase();
     process.env.NODE_ENV = "test";
-    await connectToDatabase();
-    const user = new User({
-        firstname: "John",
-        lastname: "Smith",
-        username: "jsmith@mail.com",
-        password: "sadfsdfb4",
-        joinDate: new Date(),
-    });
-    await user.save();
+    const dataConnection = await connectToDatabase();
 });
 
 // disconnects and removes the memory server after test
@@ -110,6 +101,15 @@ describe("user sign up tests", () => {
     });
 
     it("user fails to sign up as the username has already been taken", async () => {
+        const user = new User({
+            firstname: "John",
+            lastname: "Smith",
+            username: "jsmith@mail.com",
+            password: "sadfsdfb4",
+            joinDate: new Date(),
+        });
+        await user.save();
+
         request
             .post("/api/sign-up")
             .send({
@@ -207,7 +207,7 @@ describe("users successfully signs up", () => {
                     try {
                         const users = await User.find().exec();
                         if (users) {
-                            expect(users.length).equal(4);
+                            expect(users.length).equal(3);
                         }
                         done();
                     } catch (err) {
@@ -235,8 +235,6 @@ describe("user fails to login", () => {
                 }
                 expect(res.body.errors).to.be.an("array");
                 expect(res.body.errors.length).equal(2);
-
-                // Call done to signal the completion of the test
                 done();
             });
     });
@@ -256,8 +254,6 @@ describe("user fails to login", () => {
                 }
                 expect(res.body.errors).to.be.an("array");
                 expect(res.body.errors.length).equal(1);
-
-                // Call done to signal the completion of the test
                 done();
             });
     });
@@ -277,7 +273,6 @@ describe("user fails to login", () => {
                 }
                 expect(res.body.errors).to.be.an("array");
                 expect(res.body.errors.length).equal(1);
-
                 done();
             });
     });
@@ -297,28 +292,26 @@ describe("user fails to login", () => {
                 }
                 expect(res.body.errors).to.be.an("array");
                 expect(res.body.errors.length).equal(1);
-
                 done();
             });
     });
 });
 
-// broken test. keeps responding with 500. test this in postman
-// describe("user logs in", () => {
-//     it("user successfully logs in", () => {
-//         request
-//             .get("/api/login")
-//             .set("Content-Type", "application/json")
-//             .send({
-//                 username: "mjones@mail.com",
-//                 password: "85tgoej232",
-//             })
-//             .expect(200)
-//             .end(async (err, res) => {
-//                 if (err) {
-//                     done(err);
-//                 }
-//                 // done();
-//             });
-//     });
-// });
+describe("user logs in", () => {
+    it("user successfully logs in", () => {
+        request
+            .get("/api/login")
+            .set("Content-Type", "application/json")
+            .send({
+                username: "mjones@mail.com",
+                password: "85tgoej232",
+            })
+            .expect(200)
+            .end(async (err, res) => {
+                if (err) {
+                    done(err);
+                }
+                done();
+            });
+    });
+});
