@@ -121,12 +121,14 @@ exports.user_login_get = [
                                 res.send(err);
                             }
 
-                            const token = jwt.sign(
-                                { user },
-                                process.env.JWT_SECRET,
-                                { expiresIn: "30d" }
-                            );
-                            res.json({ token });
+                            if (req.user) {
+                                const token = jwt.sign(
+                                    { user },
+                                    process.env.JWT_SECRET,
+                                    { expiresIn: "30d" }
+                                );
+                                res.json({ token });
+                            }
                         });
                     }
                 }
@@ -171,4 +173,9 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
             }
         }
     )(req, res, next);
+});
+
+exports.user_logout_get = asyncHandler((req, res, next) => {
+    res.clearCookie("jwt");
+    res.json({ success: true, message: "Successfully logged out" });
 });

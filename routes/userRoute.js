@@ -22,4 +22,6 @@ router.get(
     userController.user_facebook_login_callback_get
 );
 
+router.get("/logout", userController.user_logout_get);
+
 module.exports = router;

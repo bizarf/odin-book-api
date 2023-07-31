@@ -6,7 +6,6 @@ const { expect } = require("chai");
 const {
     connectToDatabase,
     disconnectDatabase,
-    // clearDatabase,
 } = require("../middleware/mongoConfig");
 
 // creates new mongo memory server before test
@@ -20,11 +19,6 @@ before(async () => {
 after(async () => {
     await disconnectDatabase();
 });
-
-// afterEach(async () => {
-//     // Clear the database after each test
-//     await clearDatabase();
-// });
 
 // user sign up tests
 describe("user sign up tests", () => {
@@ -207,7 +201,7 @@ describe("users successfully signs up", () => {
                     try {
                         const users = await User.find().exec();
                         if (users) {
-                            expect(users.length).equal(3);
+                            expect(users.length).equal(4);
                         }
                         done();
                     } catch (err) {

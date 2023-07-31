@@ -5,7 +5,11 @@ const { body, validationResult } = require("express-validator");
 
 // makes a new comment on the post
 exports.comment_create_post = [
-    body("comment", "The comment must not be empty").trim().escape().notEmpty(),
+    body("comment", "The comment must not be empty")
+        .trim()
+        // .escape()
+        .blacklist("<>&/")
+        .notEmpty(),
 
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
@@ -56,83 +60,89 @@ exports.comments_get = asyncHandler(async (req, res, next) => {
 // deletes comment
 exports.comment_delete = asyncHandler(async (req, res, next) => {
     const post = await Post.findById(req.params.id).exec();
+    if (!post) {
+        return res
+            .status(404)
+            .json({ success: false, message: "Post not found" });
+    }
 
-    if (!req.user._id === post.user._id) {
-        res.status(401).json({
+    const comment = await Comment.findById(req.params.commentId).exec();
+    if (!comment) {
+        return res
+            .status(404)
+            .json({ success: false, message: "Comment not found" });
+    }
+
+    if (req.user._id.toString() !== comment.user.toString()) {
+        return res.status(401).json({
             success: false,
-            message: "You are not authorized to do that",
+            message: "You are not authorized to delete this comment",
         });
     }
 
-    if (post === null) {
-        res.status(404).json({ success: false, message: "Post not found" });
-    } else {
-        const comment = await Comment.findOneAndDelete({
-            _id: req.params.commentId,
-            postId: req.params.id,
-        });
+    await comment.deleteOne();
 
-        if (comment) {
-            res.json({
-                success: true,
-                message: "Comment successfully deleted",
-            });
-        } else {
+    return res.json({
+        success: true,
+        message: "Comment successfully deleted",
+    });
+});
+
+// edit comment
+exports.comment_edit_put = [
+    body("comment", "The comment must not be empty")
+        .trim()
+        // .escape()
+        .blacklist("<>&/")
+        .notEmpty(),
+
+    asyncHandler(async (req, res, next) => {
+        const errors = validationResult(req);
+
+        // check if comment exists first
+        const comment = await Comment.findById(req.params.commentId);
+
+        if (!comment) {
             res.status(404).json({
                 success: false,
                 message: "Comment not found",
             });
         }
-    }
-});
 
-// edit comment
-exports.comment_edit_put = [
-    body("comment", "The comment must not be empty").trim().escape().notEmpty(),
-
-    asyncHandler(async (req, res, next) => {
-        const errors = validationResult(req);
-
-        const comment = await Comment.findOne({
-            _id: req.params.commentId,
+        // make a new comment for the database, but we'll need to copy some of the existing data and make some changes too
+        const updatedComment = new Comment({
+            user: req.user._id,
+            comment: req.body.comment,
+            timestamp: new Date(),
+            edited: true,
             postId: req.params.id,
+            _id: req.params.commentId,
+            likes: comment.likes,
+            likedBy: comment.likedBy,
         });
 
-        if (comment) {
-            const updatedComment = new Comment({
-                user: req.user._id,
-                comment: req.body.comment,
-                timestamp: new Date(),
-                edited: true,
-                postId: req.params.id,
-                _id: req.params.commentId,
-                likes: comment.likes,
-                likedBy: comment.likedBy,
+        // validate comment and then find and update the comment with the new comment object
+        if (!errors.isEmpty()) {
+            res.status(400).json({
+                errors: errors.array({ onlyFirstError: true }),
             });
-
-            if (!errors.isEmpty()) {
-                res.status(400).json({
-                    errors: errors.array({ onlyFirstError: true }),
+        } else {
+            const save = await Comment.findByIdAndUpdate(
+                req.params.commentId,
+                updatedComment,
+                {}
+            );
+            if (save) {
+                res.status(200).json({
+                    success: true,
+                    message: "Comment was successfully edited",
                 });
             } else {
-                const save = await updatedComment.save();
-                if (save) {
-                    res.status(200).json({
-                        success: true,
-                        message: "Comment was successfully edited",
-                    });
-                } else {
-                    res.status(500).json({
-                        success: false,
-                        message: "Failed to save comment",
-                    });
-                }
+                res.status(500).json({
+                    success: false,
+                    message: "Failed to save comment",
+                });
             }
-        } else {
-            res.status(404).json({
-                success: false,
-                message: "Comment not found",
-            });
         }
     }),
 ];
@@ -148,9 +158,29 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
         res.status(404).json({ error: "Comment not found" });
     }
 
-    const likedByCheck = comment.likedBy.filter((id) => id === req.user._id);
+    const likedByCheck = comment.likedBy
+        .map((id) => id.toString())
+        .filter((id) => id === req.user._id.toString());
 
-    if (likedByCheck.length === 1 && likedByCheck[0] === req.user_id) {
+    if (likedByCheck.length === 0 && likedByCheck[0] != req.user._id) {
+        // user adds a like to the comment
+        const addLike = await Comment.findOneAndUpdate(
+            {
+                _id: req.params.commentId,
+                postId: req.params.id,
+            },
+            {
+                $inc: { likes: 1 },
+                $addToSet: { likedBy: req.user._id },
+            }
+        );
+
+        if (addLike) {
+            res.json({ message: "Like added to comment" });
+        } else {
+            res.status(500).json({ message: "Failed to add comment" });
+        }
+    } else {
         // user removes a like to the post
         const removeLike = await Comment.findOneAndUpdate(
             {
@@ -168,24 +198,6 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
             res.json({ message: "Like removed from comment" });
         } else {
             res.status(500).json({ message: "Failed to remove comment" });
-        }
-    } else {
-        // user adds a like to the comment
-        const addLike = await Comment.findOneAndUpdate(
-            {
-                _id: req.params.commentId,
-                postId: req.params.id,
-            },
-            {
-                $inc: { likes: 1 },
-                $addToSet: { likedBy: req.user._id },
-            }
-        );
-
-        if (addLike) {
-            res.json({ message: "Like added to comment" });
-        } else {
-            res.status(500).json({ message: "Failed to add comment" });
         }
     }
 });

@@ -12,6 +12,7 @@ const UserSchema = new Schema({
     photo: { type: String },
     friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
     pendingFriends: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    type: { type: String, default: "user" },
 });
 
 module.exports = mongoose.model("User", UserSchema);

@@ -12,7 +12,7 @@ const User = require("../models/user");
 passport.use(
     new LocalStrategy(async (username, password, done) => {
         try {
-            const user = await User.findOne({ username: username });
+            const user = await User.findOne({ username });
             if (!user) {
                 return done(null, false, { msg: "Incorrect username" });
             }
@@ -42,7 +42,7 @@ passport.use(
         // we need async as we have to wait for a jwt payload to exist or else routes will give a 500 status error even with a correct token
         async (jwt_payload, done) => {
             try {
-                const user = await User.findOne({ id: jwt_payload.sub });
+                const user = await User.findById(jwt_payload.user._id);
                 // if can't find user, then don't login. else set user to req.user
                 if (!user) {
                     return done(null, false);

@@ -7,7 +7,8 @@ const { body, validationResult } = require("express-validator");
 exports.post_create_post = [
     body("postContent", "The post must not be empty")
         .trim()
-        .escape()
+        // .escape()
+        .blacklist("<>&/")
         .notEmpty(),
 
     asyncHandler(async (req, res, next) => {
@@ -44,7 +45,8 @@ exports.post_create_post = [
 exports.post_edit_put = [
     body("postContent", "The post must not be empty")
         .trim()
-        .escape()
+        // .escape()
+        .blacklist("<>&/")
         .notEmpty(),
 
     asyncHandler(async (req, res, next) => {
@@ -98,32 +100,34 @@ exports.post_edit_put = [
 exports.post_remove_delete = asyncHandler(async (req, res, next) => {
     const post = await Post.findById(req.params.id).exec();
 
-    if (!req.user._id === post.user._id) {
-        res.status(401).json({
+    if (!post) {
+        return res
+            .status(404)
+            .json({ success: false, message: "Post not found" });
+    }
+
+    if (req.user._id.toString() !== post.user.toString()) {
+        return res.status(401).json({
             success: false,
-            message: "You are not authorized to do that",
+            message: "You are not authorized to delete this post",
         });
     }
 
-    if (post === null) {
-        res.status(404).json({ success: false, message: "Post not found" });
+    const comments = await Comment.find({ postId: req.params.id });
+    if (comments) {
+        await Comment.deleteMany({ postId: req.params.id });
+    }
+    const deletePost = await Post.findByIdAndDelete(req.params.id);
+    if (deletePost) {
+        res.status(204).json({
+            success: true,
+            message: "Post successfully deleted",
+        });
     } else {
-        const comments = await Comment.find({ postId: req.params.id });
-        if (comments) {
-            await Comment.deleteMany({ postId: req.params.id });
-        }
-        const deletedPost = await Post.findByIdAndDelete(req.params.id);
-        if (deletedPost) {
-            res.status(204).json({
-                success: true,
-                message: "Post successfully deleted",
-            });
-        } else {
-            res.status(500).json({
-                success: false,
-                message: "Failed to delete post",
-            });
-        }
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete post",
+        });
     }
 });
 
@@ -176,24 +180,11 @@ exports.post_toggle_put = asyncHandler(async (req, res, next) => {
         res.status(404).json({ success: false, message: "Post not found" });
     }
 
-    const likedByCheck = post.likedBy.filter((id) => id === req.user._id);
+    const likedByCheck = post.likedBy
+        .map((id) => id.toString())
+        .filter((id) => id === req.user._id.toString());
 
-    if (likedByCheck.length === 1 && likedByCheck[0] === req.user_id) {
-        // user removes a like to the post
-        const removeLike = await Post.findByIdAndUpdate(req.params.id, {
-            $inc: { likes: -1 },
-            $pull: { likedBy: req.user._id },
-        });
-
-        if (removeLike) {
-            res.json({ success: true, message: "Like removed from post" });
-        } else {
-            res.status(500).json({
-                success: false,
-                message: "Failed to remove like",
-            });
-        }
-    } else {
+    if (likedByCheck.length === 0 && likedByCheck[0] != req.user._id) {
         // user adds a like to the post
         const addLike = await Post.findByIdAndUpdate(req.params.id, {
             $inc: { likes: 1 },
@@ -206,6 +197,21 @@ exports.post_toggle_put = asyncHandler(async (req, res, next) => {
             res.status(500).json({
                 success: false,
                 message: "Failed to add like",
+            });
+        }
+    } else {
+        // user removes a like to the post
+        const removeLike = await Post.findByIdAndUpdate(req.params.id, {
+            $inc: { likes: -1 },
+            $pull: { likedBy: req.user._id },
+        });
+
+        if (removeLike) {
+            res.json({ success: true, message: "Like removed from post" });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: "Failed to remove like",
             });
         }
     }
