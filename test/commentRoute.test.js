@@ -16,7 +16,6 @@ describe("comment test", () => {
     let johnJWT;
     let pollyJWT;
     let johnId;
-    let pollyId;
 
     // creates new mongo memory server before test
     before(async () => {

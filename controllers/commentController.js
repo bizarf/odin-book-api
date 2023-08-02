@@ -22,18 +22,18 @@ exports.comment_create_post = [
         });
 
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: errors.array({ onlyFirstError: true }),
             });
         } else {
             const save = await comment.save();
             if (save) {
-                res.status(201).json({
+                return res.status(201).json({
                     success: true,
                     message: "Comment was successfully made",
                 });
             } else {
-                res.status(500).json({
+                return res.status(500).json({
                     success: false,
                     message: "Failed to save comment",
                 });
@@ -47,14 +47,16 @@ exports.comments_get = asyncHandler(async (req, res, next) => {
     // check the post exists
     const post = await Post.findById(req.params.id).exec();
     if (post === null) {
-        res.status(404).json({ success: false, message: "Post not found" });
+        return res
+            .status(404)
+            .json({ success: false, message: "Post not found" });
     }
 
     // find comments by the post Id
     const allComments = await Comment.find({ postId: req.params.id })
         .populate("user")
         .exec();
-    res.json({ allComments });
+    return res.json({ allComments });
 });
 
 // deletes comment
@@ -103,7 +105,7 @@ exports.comment_edit_put = [
         const comment = await Comment.findById(req.params.commentId);
 
         if (!comment) {
-            res.status(404).json({
+            return res.status(404).json({
                 success: false,
                 message: "Comment not found",
             });
@@ -123,7 +125,7 @@ exports.comment_edit_put = [
 
         // validate comment and then find and update the comment with the new comment object
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: errors.array({ onlyFirstError: true }),
             });
         } else {
@@ -133,12 +135,12 @@ exports.comment_edit_put = [
                 {}
             );
             if (save) {
-                res.status(200).json({
+                return res.status(200).json({
                     success: true,
                     message: "Comment was successfully edited",
                 });
             } else {
-                res.status(500).json({
+                return res.status(500).json({
                     success: false,
                     message: "Failed to save comment",
                 });
@@ -155,7 +157,7 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
     }).exec();
 
     if (comment === null) {
-        res.status(404).json({ error: "Comment not found" });
+        return res.status(404).json({ error: "Comment not found" });
     }
 
     const likedByCheck = comment.likedBy
@@ -176,9 +178,9 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
         );
 
         if (addLike) {
-            res.json({ message: "Like added to comment" });
+            return res.json({ message: "Like added to comment" });
         } else {
-            res.status(500).json({ message: "Failed to add comment" });
+            return res.status(500).json({ message: "Failed to add comment" });
         }
     } else {
         // user removes a like to the post
@@ -195,9 +197,11 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
         );
 
         if (removeLike) {
-            res.json({ message: "Like removed from comment" });
+            return res.json({ message: "Like removed from comment" });
         } else {
-            res.status(500).json({ message: "Failed to remove comment" });
+            return res
+                .status(500)
+                .json({ message: "Failed to remove comment" });
         }
     }
 });

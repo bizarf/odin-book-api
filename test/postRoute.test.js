@@ -318,9 +318,6 @@ describe("post tests", () => {
                 password: "340g3g0gue0",
             })
             .expect(200);
-        // .expect((res) => {
-        //     pollyJWT = res.body.token;
-        // });
 
         await agent
             .post("/api/create-post")

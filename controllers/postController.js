@@ -21,18 +21,18 @@ exports.post_create_post = [
         });
 
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: errors.array({ onlyFirstError: true }),
             });
         } else {
             const save = await post.save();
             if (save) {
-                res.status(201).json({
+                return res.status(201).json({
                     success: true,
                     message: "Post was successfully made",
                 });
             } else {
-                res.status(500).json({
+                return res.status(500).json({
                     success: false,
                     message: "Failed to save post",
                 });
@@ -57,7 +57,7 @@ exports.post_edit_put = [
 
         // make sure the post exists first
         if (!post) {
-            res.status(404).json({
+            return res.status(404).json({
                 success: false,
                 message: "The post does not exist",
             });
@@ -72,7 +72,7 @@ exports.post_edit_put = [
         });
 
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: errors.array({ onlyFirstError: true }),
             });
         } else {
@@ -82,12 +82,12 @@ exports.post_edit_put = [
                 {}
             );
             if (save) {
-                res.status(200).json({
+                return res.status(200).json({
                     success: true,
                     message: "Post was successfully edited",
                 });
             } else {
-                res.status(500).json({
+                return res.status(500).json({
                     success: false,
                     message: "Failed to save post",
                 });
@@ -119,12 +119,12 @@ exports.post_remove_delete = asyncHandler(async (req, res, next) => {
     }
     const deletePost = await Post.findByIdAndDelete(req.params.id);
     if (deletePost) {
-        res.status(204).json({
+        return res.status(204).json({
             success: true,
             message: "Post successfully deleted",
         });
     } else {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Failed to delete post",
         });
@@ -152,9 +152,9 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
         { $limit: postsPerPage },
     ]);
     if (timeline) {
-        res.json({ success: true, timeline });
+        return res.json({ success: true, timeline });
     } else {
-        res.status(404).json({
+        return res.status(404).json({
             success: false,
             message: "Could not fetch posts",
         });
@@ -166,9 +166,11 @@ exports.post_single_get = asyncHandler(async (req, res, next) => {
     const post = await Post.findById(req.params.id).populate("user").exec();
 
     if (post === null) {
-        res.status(404).json({ success: false, message: "Post not found" });
+        return res
+            .status(404)
+            .json({ success: false, message: "Post not found" });
     } else {
-        res.json(post);
+        return res.json(post);
     }
 });
 
@@ -177,7 +179,9 @@ exports.post_toggle_put = asyncHandler(async (req, res, next) => {
     const post = await Post.findById(req.params.id).exec();
 
     if (post === null) {
-        res.status(404).json({ success: false, message: "Post not found" });
+        return res
+            .status(404)
+            .json({ success: false, message: "Post not found" });
     }
 
     const likedByCheck = post.likedBy
@@ -192,9 +196,9 @@ exports.post_toggle_put = asyncHandler(async (req, res, next) => {
         });
 
         if (addLike) {
-            res.json({ success: true, message: "Like added to post" });
+            return res.json({ success: true, message: "Like added to post" });
         } else {
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: "Failed to add like",
             });
@@ -207,9 +211,12 @@ exports.post_toggle_put = asyncHandler(async (req, res, next) => {
         });
 
         if (removeLike) {
-            res.json({ success: true, message: "Like removed from post" });
+            return res.json({
+                success: true,
+                message: "Like removed from post",
+            });
         } else {
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: "Failed to remove like",
             });

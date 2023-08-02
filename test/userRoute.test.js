@@ -12,7 +12,7 @@ const {
 before(async () => {
     await disconnectDatabase();
     process.env.NODE_ENV = "test";
-    const dataConnection = await connectToDatabase();
+    await connectToDatabase();
 });
 
 // disconnects and removes the memory server after test

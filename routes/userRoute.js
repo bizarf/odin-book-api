@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
-const passport = require("passport");
 
 router.get("/", (req, res, next) => {
     res.json({ message: "Welcome to the API" });

@@ -63,14 +63,14 @@ exports.user_signup_post = [
                 });
 
                 if (!errors.isEmpty()) {
-                    res.status(400);
-                    res.json({
+                    return res.status(400).json({
                         errors: errors.array({ onlyFirstError: true }),
                     });
                 } else {
                     await user.save();
-                    res.status(201);
-                    res.json({ message: "Sign up was successful!" });
+                    return res
+                        .status(201)
+                        .json({ message: "Sign up was successful!" });
                 }
             }
         });
@@ -101,8 +101,7 @@ exports.user_login_get = [
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            res.status(401);
-            res.json({
+            return res.status(401).json({
                 errors: errors.array({ onlyFirstError: true }),
             });
         } else {
@@ -114,11 +113,11 @@ exports.user_login_get = [
                 (err, user, info) => {
                     if (err || !user) {
                         // set status to 401 (unauthorized) and send the error message as a json object
-                        res.status(401).json(info);
+                        return res.status(401).json(info);
                     } else {
                         req.login(user, { session: false }, (err) => {
                             if (err) {
-                                res.send(err);
+                                return res.send(err);
                             }
 
                             if (req.user) {
@@ -127,7 +126,7 @@ exports.user_login_get = [
                                     process.env.JWT_SECRET,
                                     { expiresIn: "30d" }
                                 );
-                                res.json({ token });
+                                return res.json({ token });
                             }
                         });
                     }
@@ -158,17 +157,17 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
         },
         (err, user, info) => {
             if (err || !user) {
-                res.status(401).json(info);
+                return res.status(401).json(info);
             } else {
                 // login the user with passport js, and then create and send a jwt
                 req.login(user, { session: false }, (err) => {
                     if (err) {
-                        res.send(err);
+                        return res.send(err);
                     }
                     const token = jwt.sign({ user }, process.env.JWT_SECRET, {
                         expiresIn: "30d",
                     });
-                    res.json({ token });
+                    return res.json({ token });
                 });
             }
         }
@@ -177,5 +176,5 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
 
 exports.user_logout_get = asyncHandler((req, res, next) => {
     res.clearCookie("jwt");
-    res.json({ success: true, message: "Successfully logged out" });
+    return res.json({ success: true, message: "Successfully logged out" });
 });

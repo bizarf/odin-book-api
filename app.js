@@ -23,6 +23,7 @@ require("./middleware/passportConfig");
 // require connect function after dotenv init or else env variables won't be read
 const { connectToDatabase } = require("./middleware/mongoConfig");
 
+// start up mongo database
 connectToDatabase().then(() => {
     console.log("Connected to the database");
 });

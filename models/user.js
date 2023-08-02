@@ -11,8 +11,11 @@ const UserSchema = new Schema({
     joinDate: { type: Date },
     photo: { type: String },
     friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    pendingFriends: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    type: { type: String, default: "user" },
+    type: {
+        type: String,
+        enum: ["user", "mod", "admin"],
+        default: "user",
+    },
 });
 
 module.exports = mongoose.model("User", UserSchema);
