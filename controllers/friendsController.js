@@ -89,6 +89,7 @@ exports.friends_request_send_post = asyncHandler(async (req, res, next) => {
         // if the previous request was rejected and the user tries to send another friend request, then we can just update the original request's status to pending
         if (existingRequest.status === "rejected") {
             existingRequest.status = "pending";
+            existingRequest.createdAt = new Date();
             await existingRequest.save();
             res.status(200).json({
                 success: true,
