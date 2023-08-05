@@ -154,6 +154,7 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
         "facebook",
         {
             session: false,
+            successRedirect: "http://localhost:5173/odin-book-client/#/",
             failureRedirect: "/api/facebook-login",
             // email scope didn't work. was supposed to get email address
             // scope: ["email"],
