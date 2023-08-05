@@ -10,7 +10,7 @@ router.get("/", (req, res, next) => {
 router.post("/sign-up", userController.user_signup_post);
 
 // user login
-router.post("/login", userController.user_login_get);
+router.post("/login", userController.user_login_post);
 
 // facebook login
 router.get("/facebook-login", userController.user_facebook_login_get);

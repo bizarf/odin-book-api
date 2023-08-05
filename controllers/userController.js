@@ -77,7 +77,7 @@ exports.user_signup_post = [
     }),
 ];
 
-exports.user_login_get = [
+exports.user_login_post = [
     body("username")
         .trim()
         .escape()
@@ -92,10 +92,13 @@ exports.user_login_get = [
                 throw new Error("User does not exist");
             }
         }),
-    body("password", "The password must not be empty")
+    body("password")
         .trim()
         .escape()
-        .notEmpty(),
+        .notEmpty()
+        .withMessage("You must enter a password")
+        .isLength({ min: 8 })
+        .withMessage("Your password must be at least 8 characters long"),
 
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
