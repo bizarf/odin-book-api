@@ -154,7 +154,7 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
         "facebook",
         {
             session: false,
-            successRedirect: "http://localhost:5173/odin-book-client/#/",
+            // successRedirect: "http://localhost:5173/odin-book-client/#/",
             failureRedirect: "/api/facebook-login",
             // email scope didn't work. was supposed to get email address
             // scope: ["email"],
@@ -171,7 +171,10 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
                     const token = jwt.sign({ user }, process.env.JWT_SECRET, {
                         expiresIn: "30d",
                     });
-                    return res.json({ token });
+                    res.json({ token });
+                    return res.redirect(
+                        "http://localhost:5173/odin-book-client/"
+                    );
                 });
             }
         }
