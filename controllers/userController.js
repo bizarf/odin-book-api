@@ -171,10 +171,9 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
                     const token = jwt.sign({ user }, process.env.JWT_SECRET, {
                         expiresIn: "30d",
                     });
-                    res.json({ token });
-                    return res.redirect(
-                        "http://localhost:5173/odin-book-client/"
-                    );
+                    // res.json({ token });
+                    res.redirect("http://localhost:5173/odin-book-client/");
+                    return res.cookie("jwt_auth", token, { httpOnly: true });
                 });
             }
         }
