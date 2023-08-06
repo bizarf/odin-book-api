@@ -172,8 +172,10 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
                         expiresIn: "30d",
                     });
                     // res.json({ token });
-                    res.redirect("http://localhost:5173/odin-book-client/#/");
-                    return res.cookie("jwt_auth", token, { httpOnly: true });
+                    res.cookie("jwt_auth", token, { httpOnly: true });
+                    return res.redirect(
+                        "http://localhost:5173/odin-book-client/#/"
+                    );
                 });
             }
         }
