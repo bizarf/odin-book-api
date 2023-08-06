@@ -62,9 +62,9 @@ passport.use(
         {
             clientID: process.env.FACEBOOK_APP_ID,
             clientSecret: process.env.FACEBOOK_APP_SECRET,
-            callbackURL: "/api/facebook-login/callback",
-            // callbackURL:
-            //     "https://odin-book-api-5r5e.onrender.com/api/facebook-login/callback",
+            // callbackURL: "/api/facebook-login/callback",
+            callbackURL:
+                "https://odin-book-api-5r5e.onrender.com/api/facebook-login/callback",
             profileFields: ["id", "photos", "name"],
         },
         async (accessToken, refreshToken, profile, done) => {
