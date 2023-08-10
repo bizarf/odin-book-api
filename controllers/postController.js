@@ -147,7 +147,7 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
             },
         },
         { $sort: { timestamp: -1 } },
-        { $count: "totalPosts" },
+        // { $count: "totalPosts" },
         { $skip: page * postsPerPage },
         { $limit: postsPerPage },
     ]);

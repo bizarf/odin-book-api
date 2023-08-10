@@ -45,7 +45,7 @@ describe("post tests", () => {
             .expect(201);
 
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "jsmith@mail.com",
@@ -198,6 +198,9 @@ describe("post tests", () => {
                 expect(res.body).to.be.an("object");
                 expect(res.body.success).to.equal(true);
                 expect(res.body.timeline.length).to.equal(1);
+                expect(res.body.timeline[0].postContent).to.equal(
+                    "This is a test"
+                );
             });
     });
 
@@ -252,7 +255,7 @@ describe("post tests", () => {
 
     it("another user adds a like to the first post", async () => {
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "polariel@mail.com",
@@ -311,7 +314,7 @@ describe("post tests", () => {
         await agent.get("/api/logout").expect(200);
 
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "polariel@mail.com",

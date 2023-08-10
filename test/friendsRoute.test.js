@@ -45,7 +45,7 @@ describe("friends route test", () => {
             .expect(201);
 
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "jsmith@mail.com",
@@ -57,7 +57,7 @@ describe("friends route test", () => {
             });
 
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "polariel@mail.com",

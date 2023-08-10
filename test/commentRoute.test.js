@@ -46,7 +46,7 @@ describe("comment test", () => {
             .expect(201);
 
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "jsmith@mail.com",
@@ -101,7 +101,7 @@ describe("comment test", () => {
 
     it("user makes a comment", async () => {
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "jsmith@mail.com",
@@ -135,7 +135,7 @@ describe("comment test", () => {
         await agent.get("/api/logout").expect(200);
 
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "polariel@mail.com",
@@ -261,7 +261,7 @@ describe("comment test", () => {
     it("user delete's their comment", async () => {
         await agent.get("/api/logout").expect(200);
         await agent
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "jsmith@mail.com",

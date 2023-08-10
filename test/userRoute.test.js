@@ -216,7 +216,7 @@ describe("users successfully signs up", () => {
 describe("user fails to login", () => {
     it("user enters in no text", (done) => {
         request
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "",
@@ -235,7 +235,7 @@ describe("user fails to login", () => {
 
     it("user doesn't enter a username", (done) => {
         request
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "",
@@ -254,7 +254,7 @@ describe("user fails to login", () => {
 
     it("user doesn't enter a password", (done) => {
         request
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "mjones@mail.com",
@@ -273,7 +273,7 @@ describe("user fails to login", () => {
 
     it("user enters a username that doesn't exist", (done) => {
         request
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "mjones2@mail.com",
@@ -294,7 +294,7 @@ describe("user fails to login", () => {
 describe("user logs in", () => {
     it("user successfully logs in", () => {
         request
-            .get("/api/login")
+            .post("/api/login")
             .set("Content-Type", "application/json")
             .send({
                 username: "mjones@mail.com",
