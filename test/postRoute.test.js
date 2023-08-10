@@ -179,7 +179,11 @@ describe("post tests", () => {
         await request
             .delete(`/api/post/${postId}`)
             .set("Authorization", "Bearer " + johnJWT)
-            .expect(204);
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                expect(res.body.success).to.equal(true);
+            });
 
         const postCheck = await Post.find({
             postContent: "This is an edited test",
@@ -201,7 +205,7 @@ describe("post tests", () => {
                 expect(res.body.timeline[0].postContent).to.equal(
                     "This is a test"
                 );
-                console.log(res.body.timeline[0]);
+                // console.log(res.body.timeline[0]);
             });
     });
 

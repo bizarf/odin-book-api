@@ -113,13 +113,14 @@ exports.post_remove_delete = asyncHandler(async (req, res, next) => {
         });
     }
 
-    const comments = await Comment.find({ postId: req.params.id });
+    const comments = await Comment.find({ postId: req.params.id }).exec();
     if (comments) {
         await Comment.deleteMany({ postId: req.params.id });
     }
-    const deletePost = await Post.findByIdAndDelete(req.params.id);
+
+    const deletePost = await Post.findByIdAndDelete(req.params.id).exec();
     if (deletePost) {
-        return res.status(204).json({
+        return res.status(200).json({
             success: true,
             message: "Post successfully deleted",
         });
