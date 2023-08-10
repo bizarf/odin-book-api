@@ -201,6 +201,7 @@ describe("post tests", () => {
                 expect(res.body.timeline[0].postContent).to.equal(
                     "This is a test"
                 );
+                console.log(res.body.timeline[0]);
             });
     });
 

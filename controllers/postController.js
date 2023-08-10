@@ -150,6 +150,23 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
         // { $count: "totalPosts" },
         { $skip: page * postsPerPage },
         { $limit: postsPerPage },
+        {
+            $lookup: {
+                from: "users", // Replace with the actual collection name
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        { $unwind: "$user" },
+        {
+            $project: {
+                "user.password": 0,
+                "user.joinDate": 0,
+                "user.friends": 0,
+                "user.provider": 0,
+            },
+        },
     ]);
     if (timeline) {
         return res.json({ success: true, timeline });
