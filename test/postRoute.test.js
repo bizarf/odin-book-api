@@ -347,6 +347,24 @@ describe("post tests", () => {
         expect(pollyPost.user._id).to.not.equal(johnId);
     });
 
+    it("the global feed shows all user posts", async () => {
+        await request
+            .get("/api/posts/global")
+            .set("Authorization", "Bearer " + pollyJWT)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                expect(res.body.success).to.equal(true);
+                expect(res.body.globalTimeline.length).to.equal(2);
+                expect(res.body.globalTimeline[0].postContent).to.equal(
+                    "This is Polly's post"
+                );
+                expect(res.body.globalTimeline[1].postContent).to.equal(
+                    "This is a test"
+                );
+            });
+    });
+
     it("user fails to delete another user's comment", async () => {
         const pollyPost = await Post.findOne({
             postContent: "This is Polly's post",

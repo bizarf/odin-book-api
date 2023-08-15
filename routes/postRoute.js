@@ -45,4 +45,11 @@ router.get(
     postController.posts_get
 );
 
+// all posts global feed GET
+router.get(
+    "/posts/global",
+    passport.authenticate("jwt", { session: false }),
+    postController.posts_global_get
+);
+
 module.exports = router;
