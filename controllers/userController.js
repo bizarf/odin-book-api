@@ -60,6 +60,7 @@ exports.user_signup_post = [
                     password: hashedPassword,
                     provider: "local",
                     joinDate: new Date(),
+                    photo: "",
                 });
 
                 if (!errors.isEmpty()) {
@@ -184,3 +185,89 @@ exports.user_logout_get = asyncHandler((req, res, next) => {
     res.clearCookie("jwt");
     return res.json({ success: true, message: "Successfully logged out" });
 });
+
+// fetches the user details based on the id provided in the url params
+exports.user_profile_get = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.params.userId)
+        .select("-password")
+        .exec();
+
+    if (user === null) {
+        return res
+            .status(404)
+            .json({ success: false, message: "User not found" });
+    } else {
+        return res.json({ success: true, user: user });
+    }
+});
+
+// update profile
+exports.user_profile_update_put = [
+    body("firstname", "You must enter a first name").trim().escape().notEmpty(),
+    body("lastname", "You must enter a last name").trim().escape().notEmpty(),
+    body("username")
+        .trim()
+        .escape()
+        .notEmpty()
+        .withMessage("You must enter a username")
+        .custom(async (value, { req, res }) => {
+            const user = await User.findById(req.params.userId).exec();
+            const userExists = await User.findOne({
+                username: value,
+            }).exec();
+
+            if (userExists && user.username != value) {
+                throw new Error("User already exists");
+            }
+        }),
+    body("photo").trim().blacklist("<>&/"),
+
+    asyncHandler(async (req, res, next) => {
+        const errors = validationResult(req);
+
+        const user = await User.findById(req.params.userId).exec();
+
+        if (req.user._id.toString() !== req.params.userId) {
+            return res.status(401).json({
+                success: false,
+                message: "You are not authorized to edit this user",
+            });
+        }
+
+        const updatedUser = new User({
+            _id: req.params.userId,
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            username: req.body.username,
+            provider: user.provider,
+            joinDate: user.joinDate,
+            photo: req.body.photo,
+            friends: user.friends,
+            type: user.type,
+        });
+
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                errors: errors.array({ onlyFirstError: true }),
+            });
+        } else {
+            const save = await User.findByIdAndUpdate(
+                req.params.userId,
+                updatedUser,
+                {}
+            );
+
+            if (save) {
+                return res.status(200).json({
+                    success: true,
+                    message: "User was successfully edited",
+                });
+            } else {
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to save user",
+                });
+            }
+        }
+    }),
+];

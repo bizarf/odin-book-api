@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const passport = require("passport");
 
 router.get("/", (req, res, next) => {
     res.json({ message: "Welcome to the API" });
@@ -22,5 +23,19 @@ router.get(
 );
 
 router.get("/logout", userController.user_logout_get);
+
+// get user info based on id
+router.get(
+    "/profile/:userId",
+    passport.authenticate("jwt", { session: false }),
+    userController.user_profile_get
+);
+
+// update user info route
+router.put(
+    "/profile/:userId",
+    passport.authenticate("jwt", { session: false }),
+    userController.user_profile_update_put
+);
 
 module.exports = router;

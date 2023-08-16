@@ -95,16 +95,19 @@ describe("user sign up tests", () => {
     });
 
     it("user fails to sign up as the username has already been taken", async () => {
-        const user = new User({
-            firstname: "John",
-            lastname: "Smith",
-            username: "jsmith@mail.com",
-            password: "sadfsdfb4",
-            joinDate: new Date(),
-        });
-        await user.save();
+        await request
+            .post("/api/sign-up")
+            .send({
+                firstname: "John",
+                lastname: "Smith",
+                username: "jsmith@mail.com",
+                password: "sadfsdfb4",
+                confirmPassword: "sadfsdfb4",
+            })
+            .expect("Content-Type", /json/)
+            .expect(201);
 
-        request
+        await request
             .post("/api/sign-up")
             .send({
                 firstname: "Joe",
@@ -115,19 +118,19 @@ describe("user sign up tests", () => {
             })
             .expect("Content-Type", /json/)
             .expect(400)
-            .end(async (err, res) => {
-                if (err) {
-                    console.log(err);
-                } else {
-                    expect(res.body.errors).to.be.an("array");
-                    expect(res.body.errors.length).equal(1);
-                    expect(res.body.errors[0].msg).equal("User already exists");
-                }
+            .expect((res) => {
+                expect(res.body.errors).to.be.an("array");
+                expect(res.body.errors.length).equal(1);
+                expect(res.body.errors[0].msg).equal("User already exists");
             });
     });
 });
 
 describe("users successfully signs up", () => {
+    let johnId;
+    let pennyJWT;
+    let johnJWT;
+
     it("user makes a new account", (done) => {
         request
             .post("/api/sign-up")
@@ -200,6 +203,7 @@ describe("users successfully signs up", () => {
                     expect(res.body.message).equal("Sign up was successful!");
                     try {
                         const users = await User.find().exec();
+                        johnId = users[0]._id;
                         if (users) {
                             expect(users.length).equal(4);
                         }
@@ -208,6 +212,88 @@ describe("users successfully signs up", () => {
                         done(err);
                     }
                 }
+            });
+    });
+
+    it("user details are retrived", async () => {
+        await request
+            .post("/api/login")
+            .set("Content-Type", "application/json")
+            .send({
+                username: "psmith@mail.com",
+                password: "94hgawht0j",
+            })
+            .expect(200)
+            .expect((res) => {
+                pennyJWT = res.body.token;
+            });
+
+        await request
+            .get(`/api/profile/${johnId}`)
+            .set("Authorization", "Bearer " + pennyJWT)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                expect(res.body.success).to.equal(true);
+                expect(res.body.user).to.be.an("object");
+                expect(res.body.user.username).to.equal("jsmith@mail.com");
+                expect(res.body.user.firstname).to.equal("John");
+                expect(res.body.user.lastname).to.equal("Smith");
+            });
+    });
+
+    it("John edits his lastname", async () => {
+        await request
+            .post("/api/login")
+            .set("Content-Type", "application/json")
+            .send({
+                username: "jsmith@mail.com",
+                password: "sadfsdfb4",
+            })
+            .expect(200)
+            .expect((res) => {
+                johnJWT = res.body.token;
+            });
+
+        await request
+            .put(`/api/profile/${johnId}`)
+            .set("Authorization", "Bearer " + johnJWT)
+            .send({
+                firstname: "John",
+                lastname: "Powers",
+                username: "jsmith@mail.com",
+                photo: "",
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                expect(res.body.success).to.equal(true);
+            });
+
+        const updatedJohn = await User.find({
+            firstname: "John",
+            lastname: "Powers",
+        });
+
+        expect(updatedJohn.length).to.equal(1);
+        expect(updatedJohn[0].firstname).to.equal("John");
+        expect(updatedJohn[0].lastname).to.equal("Powers");
+    });
+
+    it("John fails to change his username, as the username is already taken", async () => {
+        await request
+            .put(`/api/profile/${johnId}`)
+            .set("Authorization", "Bearer " + johnJWT)
+            .send({
+                firstname: "John",
+                lastname: "Smith",
+                username: "mjones@mail.com",
+                photo: "",
+            })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                console.log(res.body);
             });
     });
 });
