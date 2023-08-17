@@ -14,7 +14,7 @@ describe("post tests", () => {
     let johnJWT;
     let pollyJWT;
     let johnId;
-    // let pollyId;
+    let pollyId;
 
     // creates new mongo memory server before test
     before(async () => {
@@ -359,6 +359,7 @@ describe("post tests", () => {
                 expect(res.body.globalTimeline[0].postContent).to.equal(
                     "This is Polly's post"
                 );
+                pollyId = res.body.globalTimeline[0].user._id;
                 expect(res.body.globalTimeline[1].postContent).to.equal(
                     "This is a test"
                 );
@@ -379,6 +380,35 @@ describe("post tests", () => {
                 expect(res.body.success).to.equal(false);
                 expect(res.body.message).to.equal(
                     "You are not authorized to delete this post"
+                );
+            });
+    });
+
+    it("John fetches all of Polly's posts", async () => {
+        await request
+            .post("/api/create-post")
+            .set("Authorization", "Bearer " + pollyJWT)
+            .send({ postContent: "This is Polly's second post" })
+            .expect(201)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                expect(res.body.success).to.equal(true);
+                expect(res.body.message).to.equal("Post was successfully made");
+            });
+
+        await request
+            .get(`/api/posts/${pollyId}`)
+            .set("Authorization", "Bearer " + johnJWT)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                expect(res.body.success).to.equal(true);
+                expect(res.body.userPosts.length).to.equal(2);
+                expect(res.body.userPosts[1].postContent).to.equal(
+                    "This is Polly's post"
+                );
+                expect(res.body.userPosts[0].postContent).to.equal(
+                    "This is Polly's second post"
                 );
             });
     });

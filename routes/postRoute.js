@@ -52,4 +52,11 @@ router.get(
     postController.posts_global_get
 );
 
+// get all posts based on user id
+router.get(
+    "/posts/:userId",
+    passport.authenticate("jwt", { session: false }),
+    postController.post_user_get
+);
+
 module.exports = router;

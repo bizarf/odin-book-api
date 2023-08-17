@@ -204,6 +204,31 @@ exports.posts_global_get = asyncHandler(async (req, res, next) => {
     }
 });
 
+// get all posts from the provided user id
+exports.post_user_get = asyncHandler(async (req, res, next) => {
+    const page = req.query.page || 0;
+    const postsPerPage = 10;
+
+    // pagination feature: skip tells mongoose how many documents to skip, and limit will limit the number of documents that are returned
+    const userPosts = await Post.find({ user: req.params.userId })
+        .sort({ timestamp: -1 })
+        .skip(page * postsPerPage)
+        .limit(postsPerPage)
+        .populate({
+            path: "user",
+            select: "-password -joinDate -friends -provider",
+        })
+        .exec();
+    if (userPosts) {
+        return res.json({ success: true, userPosts });
+    } else {
+        return res.status(404).json({
+            success: false,
+            message: "Could not fetch posts",
+        });
+    }
+});
+
 // single post get
 exports.post_single_get = asyncHandler(async (req, res, next) => {
     const post = await Post.findById(req.params.id).populate("user").exec();
