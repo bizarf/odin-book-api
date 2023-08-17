@@ -7,7 +7,10 @@ exports.friends_list_get = asyncHandler(async (req, res, next) => {
     // fetch only the array of friends from the user object. populate is so that we have all the data from the users in that array, or else we'll only receive an array of ids
     const friendsList = await User.findById(req.user._id)
         .select("friends")
-        .populate({ path: "friends", select: "firstname lastname" })
+        .populate({
+            path: "friends",
+            select: "firstname lastname photo friends joinDate",
+        })
         .exec();
 
     if (friendsList === null) {
@@ -35,8 +38,14 @@ exports.friends_pending_list_get = asyncHandler(async (req, res, next) => {
         $or: [{ sender: user._id }, { receiver: user._id }],
         status: "pending",
     })
-        .populate({ path: "sender", select: "firstname lastname" })
-        .populate({ path: "receiver", select: "firstname lastname" });
+        .populate({
+            path: "sender",
+            select: "firstname lastname photo friends joinDate",
+        })
+        .populate({
+            path: "receiver",
+            select: "firstname lastname photo friends joinDate",
+        });
 
     if (existingRequest) {
         return res.status(200).json({ success: true, existingRequest });
