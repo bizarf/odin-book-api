@@ -2,6 +2,7 @@ const Post = require("../models/post");
 const Comment = require("../models/comment");
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 
 // create a new post
 exports.post_create_post = [
@@ -148,7 +149,6 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
             },
         },
         { $sort: { timestamp: -1 } },
-        // { $count: "totalPosts" },
         { $skip: page * postsPerPage },
         { $limit: postsPerPage },
         {
@@ -161,14 +161,29 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
         },
         { $unwind: "$user" },
         {
+            $lookup: {
+                from: "comments",
+                localField: "_id",
+                foreignField: "postId",
+                as: "comments",
+            },
+        },
+        {
+            $addFields: {
+                commentCount: { $size: "$comments" },
+            },
+        },
+        {
             $project: {
                 "user.password": 0,
                 "user.joinDate": 0,
                 "user.friends": 0,
                 "user.provider": 0,
+                comments: 0,
             },
         },
     ]);
+
     if (timeline) {
         return res.json({ success: true, timeline });
     } else {
@@ -185,15 +200,51 @@ exports.posts_global_get = asyncHandler(async (req, res, next) => {
     const postsPerPage = 10;
 
     // pagination feature: skip tells mongoose how many documents to skip, and limit will limit the number of documents that are returned
-    const globalTimeline = await Post.find()
-        .sort({ timestamp: -1 })
-        .skip(page * postsPerPage)
-        .limit(postsPerPage)
-        .populate({
-            path: "user",
-            select: "-password -joinDate -friends -provider",
-        })
-        .exec();
+    const globalTimeline = await Post.aggregate([
+        {
+            $sort: { timestamp: -1 },
+        },
+        {
+            $skip: page * postsPerPage,
+        },
+        {
+            $limit: postsPerPage,
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        {
+            $unwind: "$user",
+        },
+        {
+            $lookup: {
+                from: "comments",
+                localField: "_id",
+                foreignField: "postId",
+                as: "comments",
+            },
+        },
+        {
+            $addFields: {
+                commentCount: { $size: "$comments" },
+            },
+        },
+        {
+            $project: {
+                "user.password": 0,
+                "user.joinDate": 0,
+                "user.friends": 0,
+                "user.provider": 0,
+                comments: 0,
+            },
+        },
+    ]);
+
     if (globalTimeline) {
         return res.json({ success: true, globalTimeline });
     } else {
@@ -210,15 +261,67 @@ exports.post_user_get = asyncHandler(async (req, res, next) => {
     const postsPerPage = 10;
 
     // pagination feature: skip tells mongoose how many documents to skip, and limit will limit the number of documents that are returned
-    const userPosts = await Post.find({ user: req.params.userId })
-        .sort({ timestamp: -1 })
-        .skip(page * postsPerPage)
-        .limit(postsPerPage)
-        .populate({
-            path: "user",
-            select: "-password -joinDate -friends -provider",
-        })
-        .exec();
+    // const userPosts = await Post.find({ user: req.params.userId })
+    //     .sort({ timestamp: -1 })
+    //     .skip(page * postsPerPage)
+    //     .limit(postsPerPage)
+    //     .populate({
+    //         path: "user",
+    //         select: "-password -joinDate -friends -provider",
+    //     })
+    //     .populate("comments")
+    //     .exec();
+
+    // console.log(new mongoose.Types.ObjectId(req.params.userId));
+
+    const userPosts = await Post.aggregate([
+        {
+            $match: { user: new mongoose.Types.ObjectId(req.params.userId) },
+        },
+        {
+            $sort: { timestamp: -1 },
+        },
+        {
+            $skip: page * postsPerPage,
+        },
+        {
+            $limit: postsPerPage,
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        {
+            $unwind: "$user",
+        },
+        {
+            $lookup: {
+                from: "comments",
+                localField: "_id",
+                foreignField: "postId",
+                as: "comments",
+            },
+        },
+        {
+            $addFields: {
+                commentCount: { $size: "$comments" },
+            },
+        },
+        {
+            $project: {
+                "user.password": 0,
+                "user.joinDate": 0,
+                "user.friends": 0,
+                "user.provider": 0,
+                comments: 0,
+            },
+        },
+    ]);
+
     if (userPosts) {
         return res.json({ success: true, userPosts });
     } else {

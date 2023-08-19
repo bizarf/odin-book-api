@@ -129,6 +129,15 @@ describe("comment test", () => {
         commentId = comment._id;
         expect(comment).to.be.an("object");
         expect(comment.comment).to.equal("This is a test comment");
+
+        await request
+            .get("/api/posts")
+            .set("Authorization", "Bearer " + johnJWT)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).to.be.an("object");
+                expect(res.body.success).to.equal(true);
+            });
     });
 
     it("another user makes a comment", async () => {
