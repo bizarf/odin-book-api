@@ -229,7 +229,9 @@ exports.user_profile_update_put = [
         .withMessage("Invalid URL")
         .customSanitizer((value, { req }) => {
             // Allow only specific characters in the URL
-            const sanitizedURL = value.replace(/[^a-zA-Z0-9.\/\-]/g, "").trim();
+            const sanitizedURL = value
+                .replace(/[^a-zA-Z0-9.\/:\-]/g, "")
+                .trim();
             return sanitizedURL;
         }),
 
