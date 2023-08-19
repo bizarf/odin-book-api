@@ -224,16 +224,7 @@ exports.user_profile_update_put = [
                 throw new Error("User already exists");
             }
         }),
-    body("photo")
-        .isURL()
-        .withMessage("Invalid URL")
-        .customSanitizer((value, { req }) => {
-            // Allow only specific characters in the URL
-            const sanitizedURL = value
-                .replace(/[^a-zA-Z0-9.\/:\-]/g, "")
-                .trim();
-            return sanitizedURL;
-        }),
+    body("photo").trim().isURL().withMessage("Invalid URL"),
 
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
