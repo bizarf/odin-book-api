@@ -126,7 +126,7 @@ exports.user_login_post = [
 
                             if (req.user) {
                                 const token = jwt.sign(
-                                    { user },
+                                    { user: user._id },
                                     process.env.JWT_SECRET,
                                     { expiresIn: "30d" }
                                 );
@@ -168,9 +168,13 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
                     if (err) {
                         return res.send(err);
                     }
-                    const token = jwt.sign({ user }, process.env.JWT_SECRET, {
-                        expiresIn: "30d",
-                    });
+                    const token = jwt.sign(
+                        { user: user._id },
+                        process.env.JWT_SECRET,
+                        {
+                            expiresIn: "30d",
+                        }
+                    );
                     // res.json({ token });
                     return res.redirect(
                         `http://localhost:5173/odin-book-client/#/facebook-login?token=${token}`
@@ -197,7 +201,7 @@ exports.user_profile_get = asyncHandler(async (req, res, next) => {
             .status(404)
             .json({ success: false, message: "User not found" });
     } else {
-        return res.json({ success: true, user: user });
+        return res.json({ success: true, user });
     }
 });
 
@@ -271,22 +275,3 @@ exports.user_profile_update_put = [
         }
     }),
 ];
-
-// JWT refresh
-exports.user_refresh_JWT_post = asyncHandler((req, res, next) => {
-    const refreshToken = req.headers.authorization.split(" ")[1];
-
-    jwt.verify(refreshToken, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res
-                .status(403)
-                .json({ success: false, message: "Invalid token" });
-        }
-
-        const token = jwt.sign({ user }, process.env.JWT_SECRET, {
-            expiresIn: "30d",
-        });
-
-        return res.json({ success: true, token });
-    });
-});

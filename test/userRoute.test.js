@@ -293,7 +293,7 @@ describe("users successfully signs up", () => {
             .expect(400)
             .expect((res) => {
                 expect(res.body).to.be.an("object");
-                console.log(res.body);
+                expect(res.body.errors[0].msg).to.equal("User already exists");
             });
     });
 });

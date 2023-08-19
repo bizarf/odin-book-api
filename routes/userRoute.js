@@ -38,11 +38,4 @@ router.put(
     userController.user_profile_update_put
 );
 
-// jwt refresh route
-router.post(
-    "/refresh-token",
-    passport.authenticate("jwt", { session: false }),
-    userController.user_refresh_JWT_post
-);
-
 module.exports = router;
