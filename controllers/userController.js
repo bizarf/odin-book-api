@@ -233,7 +233,6 @@ exports.user_profile_update_put = [
             return sanitizedURL;
         }),
 
-    ,
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
 
