@@ -45,7 +45,9 @@ exports.comment_create_post = [
 // gets all comments for current post
 exports.comments_get = asyncHandler(async (req, res, next) => {
     // check the post exists
-    const post = await Post.findById(req.params.id).exec();
+    const post = await Post.findById(req.params.id)
+        .sort({ timestamp: -1 })
+        .exec();
     if (post === null) {
         return res
             .status(404)
