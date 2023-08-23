@@ -46,8 +46,7 @@ exports.comment_create_post = [
 exports.comments_get = asyncHandler(async (req, res, next) => {
     // check the post exists
     const post = await Post.findById(req.params.id)
-        .sort({ timestamp: -1 })
-        .exec();
+    .exec();
     if (post === null) {
         return res
             .status(404)
@@ -56,6 +55,7 @@ exports.comments_get = asyncHandler(async (req, res, next) => {
 
     // find comments by the post Id
     const allComments = await Comment.find({ postId: req.params.id })
+        .sort({ timestamp: -1 })
         .populate("user")
         .exec();
     return res.json({ allComments });
