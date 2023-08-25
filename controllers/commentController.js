@@ -45,8 +45,7 @@ exports.comment_create_post = [
 // gets all comments for current post
 exports.comments_get = asyncHandler(async (req, res, next) => {
     // check the post exists
-    const post = await Post.findById(req.params.id)
-    .exec();
+    const post = await Post.findById(req.params.id).exec();
     if (post === null) {
         return res
             .status(404)
@@ -180,9 +179,14 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
         );
 
         if (addLike) {
-            return res.json({ message: "Like added to comment" });
+            return res.json({
+                success: true,
+                message: "Like added to comment",
+            });
         } else {
-            return res.status(500).json({ message: "Failed to add comment" });
+            return res
+                .status(500)
+                .json({ success: false, message: "Failed to add comment" });
         }
     } else {
         // user removes a like to the post
@@ -199,11 +203,14 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
         );
 
         if (removeLike) {
-            return res.json({ message: "Like removed from comment" });
+            return res.json({
+                success: true,
+                message: "Like removed from comment",
+            });
         } else {
             return res
                 .status(500)
-                .json({ message: "Failed to remove comment" });
+                .json({ success: false, message: "Failed to remove comment" });
         }
     }
 });
