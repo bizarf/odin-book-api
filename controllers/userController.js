@@ -177,7 +177,7 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
                     );
                     // res.json({ token });
                     return res.redirect(
-                        `http://localhost:5173/odin-book-client/#/facebook-login?token=${token}`
+                        `https://bizarf.github.io/odin-book-client/#/facebook-login?token=${token}`
                     );
                 });
             }
