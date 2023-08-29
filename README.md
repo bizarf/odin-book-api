@@ -2,7 +2,7 @@
 
 The goal of this project is to make a Facebook clone using all that I've learnt. This is the REST API for that clone.
 
--   [View the live site here](link goes here)
+-   [View the live site here](https://bizarf.github.io/odin-book-client/)
 -   [View the book client repo](https://github.com/bizarf/odin-book-client)
 
 #### Install:
