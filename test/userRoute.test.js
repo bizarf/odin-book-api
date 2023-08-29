@@ -394,4 +394,24 @@ describe("user logs in", () => {
                 done();
             });
     });
+
+    it("demo user logs in", async () => {
+        await request
+            .post("/api/sign-up")
+            .send({
+                firstname: "Demo",
+                lastname: "Account",
+                username: process.env.DEMO_USERNAME,
+                password: process.env.DEMO_PASSWORD,
+                confirmPassword: process.env.DEMO_PASSWORD,
+            })
+            .expect(201);
+
+        await request
+            .post("/api/login-demo")
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.token).to.be.a("string");
+            });
+    });
 });

@@ -140,6 +140,33 @@ exports.user_login_post = [
     }),
 ];
 
+exports.user_demo_login_post = asyncHandler((req, res, next) => {
+    req.body.username = process.env.DEMO_USERNAME;
+    req.body.password = process.env.DEMO_PASSWORD;
+
+    passport.authenticate("local", { session: false }, (err, user, info) => {
+        if (err || !user) {
+            // set status to 401 (unauthorized) and send the error message as a json object
+            return res.status(401).json(info);
+        } else {
+            req.login(user, { session: false }, (err) => {
+                if (err) {
+                    return res.send(err);
+                }
+
+                if (req.user) {
+                    const token = jwt.sign(
+                        { user: user._id },
+                        process.env.JWT_SECRET,
+                        { expiresIn: "30d" }
+                    );
+                    return res.json({ token });
+                }
+            });
+        }
+    })(req, res, next);
+});
+
 // facebook login
 exports.user_facebook_login_get = asyncHandler((req, res, next) => {
     passport.authenticate("facebook", (err, user, info) => {
@@ -224,7 +251,14 @@ exports.user_profile_update_put = [
                 throw new Error("User already exists");
             }
         }),
-    body("photo").trim().isURL().withMessage("Invalid URL"),
+    body("photo")
+        .trim()
+        .if((value, { req }) => {
+            return req.body.photo;
+        })
+        .trim()
+        .isURL()
+        .withMessage("Invalid URL"),
 
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
