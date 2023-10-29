@@ -212,51 +212,6 @@ exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
     )(req, res, next);
 });
 
-// twitter login
-exports.user_twitter_login_get = asyncHandler((req, res, next) => {
-    passport.authenticate("twitter", (err, user, info) => {
-        if (err) {
-            console.log(err);
-        }
-    })(req, res, next);
-});
-
-// after an attempt to login on twitter's website, the user is sent back here
-exports.user_twitter_login_callback_get = asyncHandler((req, res, next) => {
-    passport.authenticate(
-        "twitter",
-        {
-            session: false,
-            failureRedirect: "/api/twitter-login",
-            // email scope didn't work. was supposed to get email address
-            // scope: ["email"],
-        },
-        (err, user, info) => {
-            if (err || !user) {
-                return res.status(401).json(info);
-            } else {
-                // login the user with passport js, and then create and send a jwt
-                req.login(user, { session: false }, (err) => {
-                    if (err) {
-                        return res.send(err);
-                    }
-                    const token = jwt.sign(
-                        { user: user._id },
-                        process.env.JWT_SECRET,
-                        {
-                            expiresIn: "30d",
-                        }
-                    );
-                    // res.json({ token });
-                    return res.redirect(
-                        `https://bizarf.github.io/odin-book-client/#/twitter-login?token=${token}`
-                    );
-                });
-            }
-        }
-    )(req, res, next);
-});
-
 // github login
 exports.user_github_login_get = asyncHandler((req, res, next) => {
     passport.authenticate("github", { scope: ["user:email"] })(req, res, next);
@@ -269,8 +224,6 @@ exports.user_github_login_callback_get = asyncHandler((req, res, next) => {
         {
             session: false,
             failureRedirect: "/api/github-login",
-            // email scope didn't work. was supposed to get email address
-            // scope: ["email"],
         },
         (err, user, info) => {
             if (err || !user) {

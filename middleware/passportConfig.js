@@ -4,7 +4,6 @@ const LocalStrategy = require("passport-local").Strategy;
 const FacebookStrategy = require("passport-facebook").Strategy;
 const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
-const TwitterStrategy = require("passport-twitter").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
 
 // user model
@@ -103,21 +102,6 @@ passport.use(
     )
 );
 
-// passport.use(
-//     new TwitterStrategy(
-//         {
-//             consumerKey: process.env.TWITTER_API_KEY,
-//             consumerSecret: process.env.TWITTER_API_SECRET,
-//             callbackURL: "/api/twitter-login/callback",
-//         },
-//         function (token, tokenSecret, profile, cb) {
-//             User.findOrCreate({ twitterId: profile.id }, function (err, user) {
-//                 return cb(err, user);
-//             });
-//         }
-//     )
-// );
-
 passport.use(
     new GitHubStrategy(
         {
@@ -135,9 +119,6 @@ passport.use(
                 });
 
                 // deconstruct the _json result
-                // const { id, picture, last_name, first_name } =
-                //     await profile._json;
-
                 const { id, login, name, avatar_url } = await profile._json;
 
                 // if the user isn't in the database, then make a new one and save the info
