@@ -103,20 +103,20 @@ passport.use(
     )
 );
 
-passport.use(
-    new TwitterStrategy(
-        {
-            consumerKey: process.env.TWITTER_API_KEY,
-            consumerSecret: process.env.TWITTER_API_SECRET,
-            callbackURL: "/api/twitter-login/callback",
-        },
-        function (token, tokenSecret, profile, cb) {
-            User.findOrCreate({ twitterId: profile.id }, function (err, user) {
-                return cb(err, user);
-            });
-        }
-    )
-);
+// passport.use(
+//     new TwitterStrategy(
+//         {
+//             consumerKey: process.env.TWITTER_API_KEY,
+//             consumerSecret: process.env.TWITTER_API_SECRET,
+//             callbackURL: "/api/twitter-login/callback",
+//         },
+//         function (token, tokenSecret, profile, cb) {
+//             User.findOrCreate({ twitterId: profile.id }, function (err, user) {
+//                 return cb(err, user);
+//             });
+//         }
+//     )
+// );
 
 passport.use(
     new GitHubStrategy(
