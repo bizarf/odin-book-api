@@ -13,13 +13,13 @@ To run this project on your local server, first install the dependencies with th
 npm install
 ```
 
-Next you will need to create a ".env" file at the root of the project. You will now need to create a database on MongoDB Atlas. Inside the ".env" file replace the end string with your database's connection string. The Facebook app keys require a Meta account and can be found in the developers area.
+Next you will need to create a ".env" file at the root of the project. You will now need to create a database on MongoDB Atlas. Inside the ".env" file replace the end string with your database's connection string. The GitHub app keys require a GitHub account and can be found in the developers area after creating an app.
 
 ```
 MONGODB_KEY="AMONGODBATLASKEY"
 JWT_SECRET="AJWTSECRETKEY"
-FACEBOOK_APP_ID=""
-FACEBOOK_APP_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
 DEMO_USERNAME=""
 DEMO_PASSWORD=""
 ```
