@@ -19,10 +19,28 @@ router.post("/login-demo", userController.user_demo_login_post);
 // facebook login
 router.get("/facebook-login", userController.user_facebook_login_get);
 
-// facebook login callback after the use logins in?
+// facebook login callback after the user logs in
 router.get(
     "/facebook-login/callback",
     userController.user_facebook_login_callback_get
+);
+
+// twitter login
+router.get("/twitter-login", userController.user_twitter_login_get);
+
+// twitter login callback after the user logs in
+router.get(
+    "/twitter-login/callback",
+    userController.user_twitter_login_callback_get
+);
+
+// github login
+router.get("/github-login", userController.user_github_login_get);
+
+// github login callback after the user logs in
+router.get(
+    "/github-login/callback",
+    userController.user_github_login_callback_get
 );
 
 router.get("/logout", userController.user_logout_get);

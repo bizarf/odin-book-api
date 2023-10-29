@@ -4,6 +4,8 @@ const LocalStrategy = require("passport-local").Strategy;
 const FacebookStrategy = require("passport-facebook").Strategy;
 const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
+const TwitterStrategy = require("passport-twitter").Strategy;
+const GitHubStrategy = require("passport-github2").Strategy;
 
 // user model
 const User = require("../models/user");
@@ -87,6 +89,65 @@ passport.use(
                         username: id,
                         provider: profile.provider,
                         photo: picture.data.url || "",
+                        joinDate: new Date(),
+                    });
+                    await newUser.save();
+                    return done(null, newUser);
+                }
+                return done(null, user);
+            } catch (err) {
+                console.log(err);
+                return done(null, false);
+            }
+        }
+    )
+);
+
+passport.use(
+    new TwitterStrategy(
+        {
+            consumerKey: process.env.TWITTER_API_KEY,
+            consumerSecret: process.env.TWITTER_API_SECRET,
+            callbackURL: "/api/twitter-login/callback",
+        },
+        function (token, tokenSecret, profile, cb) {
+            User.findOrCreate({ twitterId: profile.id }, function (err, user) {
+                return cb(err, user);
+            });
+        }
+    )
+);
+
+passport.use(
+    new GitHubStrategy(
+        {
+            clientID: process.env.GITHUB_CLIENT_ID,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+            callbackURL:
+                "https://odin-book-api-5r5e.onrender.com/api/github-login/callback",
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                // check if the user exists in the database
+                const user = await User.findOne({
+                    username: profile.id,
+                    provider: profile.provider,
+                });
+
+                // deconstruct the _json result
+                // const { id, picture, last_name, first_name } =
+                //     await profile._json;
+
+                const { id, login, name, avatar_url } = await profile._json;
+
+                // if the user isn't in the database, then make a new one and save the info
+                if (!user) {
+                    const newUser = new User({
+                        firstname: login,
+                        lastname: name,
+                        username: id,
+                        provider: "github",
+                        photo: avatar_url || "",
                         joinDate: new Date(),
                     });
                     await newUser.save();
