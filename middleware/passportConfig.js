@@ -144,7 +144,7 @@ passport.use(
                 if (!user) {
                     const newUser = new User({
                         firstname: login,
-                        lastname: name,
+                        lastname: name || login,
                         username: id,
                         provider: "github",
                         photo: avatar_url || "",
