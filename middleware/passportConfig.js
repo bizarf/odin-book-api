@@ -119,14 +119,14 @@ passport.use(
                 });
 
                 // deconstruct the _json result
-                const { id, login, name, avatar_url } = await profile._json;
+                const { login, name, avatar_url, email } = await profile._json;
 
                 // if the user isn't in the database, then make a new one and save the info
                 if (!user) {
                     const newUser = new User({
                         firstname: login,
                         lastname: name || login,
-                        username: id,
+                        username: email,
                         provider: "github",
                         photo: avatar_url || "",
                         joinDate: new Date(),
