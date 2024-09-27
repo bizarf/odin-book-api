@@ -2,12 +2,10 @@ const supertest = require("supertest");
 const app = require("../app");
 const request = supertest(app);
 const Post = require("../models/post");
+const { describe, after, it, before } = require("mocha");
 const { expect } = require("chai");
 const agent = supertest.agent(app);
-const {
-    connectToDatabase,
-    disconnectDatabase,
-} = require("../middleware/mongoConfig");
+const { closeDatabase } = require("../utils/config");
 
 describe("post tests", () => {
     let postId;
@@ -18,9 +16,6 @@ describe("post tests", () => {
 
     // creates new mongo memory server before test
     before(async () => {
-        await disconnectDatabase();
-        process.env.NODE_ENV = "test";
-        await connectToDatabase();
         // create our test user
         await agent
             .post("/api/sign-up")
@@ -59,7 +54,7 @@ describe("post tests", () => {
 
     // disconnects and removes the memory server after test
     after(async () => {
-        await disconnectDatabase();
+        await closeDatabase();
     });
 
     it("returns a 401 Unauthorized error due to a lack of provided JWT", (done) => {
@@ -316,8 +311,6 @@ describe("post tests", () => {
     });
 
     it("another user makes a post", async () => {
-        await agent.get("/api/logout").expect(200);
-
         await agent
             .post("/api/login")
             .set("Content-Type", "application/json")

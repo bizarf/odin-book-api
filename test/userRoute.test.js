@@ -2,22 +2,13 @@ const supertest = require("supertest");
 const app = require("../app");
 const request = supertest(app);
 const User = require("../models/user");
+const { after, describe, it, done } = require("mocha");
 const { expect } = require("chai");
-const {
-    connectToDatabase,
-    disconnectDatabase,
-} = require("../middleware/mongoConfig");
-
-// creates new mongo memory server before test
-before(async () => {
-    await disconnectDatabase();
-    process.env.NODE_ENV = "test";
-    await connectToDatabase();
-});
+const { closeDatabase } = require("../utils/config");
 
 // disconnects and removes the memory server after test
 after(async () => {
-    await disconnectDatabase();
+    await closeDatabase();
 });
 
 // user sign up tests

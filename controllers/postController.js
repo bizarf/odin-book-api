@@ -12,7 +12,7 @@ exports.post_create_post = [
         .blacklist("<>&/")
         .notEmpty(),
 
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const errors = validationResult(req);
 
         const post = new Post({
@@ -50,7 +50,7 @@ exports.post_edit_put = [
         .blacklist("<>&/")
         .notEmpty(),
 
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const errors = validationResult(req);
 
         // get the original post object, so that we can later pass the original timestamp to the updated post object
@@ -98,7 +98,7 @@ exports.post_edit_put = [
 ];
 
 // delete a post
-exports.post_remove_delete = asyncHandler(async (req, res, next) => {
+exports.post_remove_delete = asyncHandler(async (req, res) => {
     const post = await Post.findById(req.params.id).exec();
 
     if (!post) {
@@ -134,7 +134,7 @@ exports.post_remove_delete = asyncHandler(async (req, res, next) => {
 });
 
 // get all posts
-exports.posts_get = asyncHandler(async (req, res, next) => {
+exports.posts_get = asyncHandler(async (req, res) => {
     const page = req.query.page || 0;
     const postsPerPage = 10;
 
@@ -195,7 +195,7 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
 });
 
 // get all posts from all users to create a global feed
-exports.posts_global_get = asyncHandler(async (req, res, next) => {
+exports.posts_global_get = asyncHandler(async (req, res) => {
     const page = req.query.page || 0;
     const postsPerPage = 10;
 
@@ -256,7 +256,7 @@ exports.posts_global_get = asyncHandler(async (req, res, next) => {
 });
 
 // get all posts from the provided user id
-exports.post_user_get = asyncHandler(async (req, res, next) => {
+exports.post_user_get = asyncHandler(async (req, res) => {
     const page = req.query.page || 0;
     const postsPerPage = 10;
 
@@ -333,7 +333,7 @@ exports.post_user_get = asyncHandler(async (req, res, next) => {
 });
 
 // single post get
-exports.post_single_get = asyncHandler(async (req, res, next) => {
+exports.post_single_get = asyncHandler(async (req, res) => {
     const post = await Post.findById(req.params.id).populate("user").exec();
 
     if (post === null) {
@@ -346,7 +346,7 @@ exports.post_single_get = asyncHandler(async (req, res, next) => {
 });
 
 // post like PUT
-exports.post_toggle_put = asyncHandler(async (req, res, next) => {
+exports.post_toggle_put = asyncHandler(async (req, res) => {
     const post = await Post.findById(req.params.id).exec();
 
     if (post === null) {
@@ -359,7 +359,7 @@ exports.post_toggle_put = asyncHandler(async (req, res, next) => {
         .map((id) => id.toString())
         .filter((id) => id === req.user._id.toString());
 
-    if (likedByCheck.length === 0 && likedByCheck[0] != req.user._id) {
+    if (likedByCheck.length === 0 && likedByCheck[0] !== req.user._id) {
         // user adds a like to the post
         const addLike = await Post.findByIdAndUpdate(req.params.id, {
             $inc: { likes: 1 },

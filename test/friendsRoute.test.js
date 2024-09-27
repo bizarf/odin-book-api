@@ -1,14 +1,11 @@
 const supertest = require("supertest");
 const app = require("../app");
-const request = supertest(app);
 const User = require("../models/user");
 const FriendRequest = require("../models/friendRequest");
+const { describe, it, before, after } = require("mocha");
 const { expect } = require("chai");
 const agent = supertest.agent(app);
-const {
-    connectToDatabase,
-    disconnectDatabase,
-} = require("../middleware/mongoConfig");
+const { closeDatabase } = require("../utils/config");
 
 describe("friends route test", () => {
     let johnJWT;
@@ -18,9 +15,6 @@ describe("friends route test", () => {
 
     // creates new mongo memory server before test
     before(async () => {
-        await disconnectDatabase();
-        process.env.NODE_ENV = "test";
-        await connectToDatabase();
         // create our test user
         await agent
             .post("/api/sign-up")
@@ -76,7 +70,7 @@ describe("friends route test", () => {
 
     // disconnects and removes the memory server after test
     after(async () => {
-        await disconnectDatabase();
+        await closeDatabase();
     });
 
     it("John sends a friend request to Polly", async () => {

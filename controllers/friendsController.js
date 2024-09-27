@@ -3,7 +3,7 @@ const FriendRequest = require("../models/friendRequest");
 const asyncHandler = require("express-async-handler");
 
 // get all friends
-exports.friends_list_get = asyncHandler(async (req, res, next) => {
+exports.friends_list_get = asyncHandler(async (req, res) => {
     // fetch only the array of friends from the user object. populate is so that we have all the data from the users in that array, or else we'll only receive an array of ids
     const friendsList = await User.findById(req.user._id)
         .select("friends")
@@ -24,7 +24,7 @@ exports.friends_list_get = asyncHandler(async (req, res, next) => {
 });
 
 // get a list of pending friends
-exports.friends_pending_list_get = asyncHandler(async (req, res, next) => {
+exports.friends_pending_list_get = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -58,7 +58,7 @@ exports.friends_pending_list_get = asyncHandler(async (req, res, next) => {
 });
 
 // send a friend request POST
-exports.friends_request_send_post = asyncHandler(async (req, res, next) => {
+exports.friends_request_send_post = asyncHandler(async (req, res) => {
     const friend = await User.findById(req.params.friendId);
     const user = await User.findById(req.user._id);
 
@@ -129,7 +129,7 @@ exports.friends_request_send_post = asyncHandler(async (req, res, next) => {
 });
 
 // accept friend request PUT
-exports.friends_request_accept_put = asyncHandler(async (req, res, next) => {
+exports.friends_request_accept_put = asyncHandler(async (req, res) => {
     const friend = await User.findById(req.params.friendId);
     const user = await User.findById(req.user._id);
 
@@ -179,7 +179,7 @@ exports.friends_request_accept_put = asyncHandler(async (req, res, next) => {
 });
 
 // reject the friend request PUT
-exports.friends_request_reject_put = asyncHandler(async (req, res, next) => {
+exports.friends_request_reject_put = asyncHandler(async (req, res) => {
     const friend = await User.findById(req.params.friendId);
     const user = await User.findById(req.user._id);
 
@@ -225,7 +225,7 @@ exports.friends_request_reject_put = asyncHandler(async (req, res, next) => {
 });
 
 // unfriend function
-exports.friends_remove_friend_delete = asyncHandler(async (req, res, next) => {
+exports.friends_remove_friend_delete = asyncHandler(async (req, res) => {
     const friend = await User.findById(req.params.friendId);
     const user = await User.findById(req.user._id);
 

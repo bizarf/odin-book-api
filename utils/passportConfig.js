@@ -1,7 +1,7 @@
+require("dotenv").config();
 const bcrypt = require("bcrypt");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
-const FacebookStrategy = require("passport-facebook").Strategy;
 const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const GitHubStrategy = require("passport-github2").Strategy;
@@ -57,51 +57,6 @@ passport.use(
     )
 );
 
-// passport facebook strategy
-passport.use(
-    new FacebookStrategy(
-        {
-            clientID: process.env.FACEBOOK_APP_ID,
-            clientSecret: process.env.FACEBOOK_APP_SECRET,
-            // callbackURL: "/api/facebook-login/callback",
-            callbackURL:
-                "https://odin-book-api-5r5e.onrender.com/api/facebook-login/callback",
-            profileFields: ["id", "photos", "name"],
-        },
-        async (accessToken, refreshToken, profile, done) => {
-            try {
-                // check if the user exists in the database
-                const user = await User.findOne({
-                    username: profile.id,
-                    provider: profile.provider,
-                });
-
-                // deconstruct the _json result
-                const { id, picture, last_name, first_name } =
-                    await profile._json;
-
-                // if the user isn't in the database, then make a new one and save the info
-                if (!user) {
-                    const newUser = new User({
-                        firstname: first_name,
-                        lastname: last_name,
-                        username: id,
-                        provider: profile.provider,
-                        photo: picture.data.url || "",
-                        joinDate: new Date(),
-                    });
-                    await newUser.save();
-                    return done(null, newUser);
-                }
-                return done(null, user);
-            } catch (err) {
-                console.log(err);
-                return done(null, false);
-            }
-        }
-    )
-);
-
 passport.use(
     new GitHubStrategy(
         {
@@ -142,13 +97,3 @@ passport.use(
         }
     )
 );
-
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-    User.findById(id, (err, user) => {
-        done(err, user);
-    });
-});

@@ -1,11 +1,10 @@
 const createError = require("http-errors");
 const express = require("express");
-const path = require("path");
-const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const cors = require("cors");
 const compression = require("compression");
 const helmet = require("helmet");
+const config = require("./utils/config");
 
 // route imports
 const indexRouter = require("./routes/index");
@@ -16,37 +15,47 @@ const friendsRouter = require("./routes/friendsRoute");
 
 const app = express();
 
-// dotenv init
-require("dotenv").config();
-// require the passport js stuff after dotenv init or else env variables won't be read
-require("./middleware/passportConfig");
-// require connect function after dotenv init or else env variables won't be read
-const { connectToDatabase } = require("./middleware/mongoConfig");
-
-// start up mongo database
-connectToDatabase().then(() => {
-    console.log("Connected to the database");
-});
+// passport js config
+require("./utils/passportConfig");
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
-// make express use compression, helmet, and cors
 app.use(compression());
 app.use(helmet());
-app.use(cors());
+// cross origin resource sharing config
+let corsOptions;
+if (process.env.NODE_ENV === "production") {
+    corsOptions = {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"],
+    };
+} else {
+    corsOptions = {
+        origin: "https://bizarf.github.io",
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"],
+    };
+}
+app.use(cors(corsOptions));
 
 // express rate limiter
-const RateLimit = require("express-rate-limit");
-const limiter = RateLimit({
+const { rateLimit } = require("express-rate-limit");
+const limiter = rateLimit({
+    // 1 minute
     windowMs: 1 * 60 * 1000,
-    max: 50,
+    limit: 100,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
 });
 app.use(limiter);
 
-// how the app uses the routes
+config.connectToDatabase();
+
+// routes
 app.use("/", indexRouter);
 app.use("/api", userRouter);
 app.use("/api", postRouter);
@@ -54,19 +63,19 @@ app.use("/api", commentRouter);
 app.use("/api", friendsRouter);
 
 // catch 404 and forward to error handler
-app.use((req, res, next) => {
-    next(createError(404));
+app.use(function (req, res, next) {
+    next(createError(404, "Error 404: Page not found"));
 });
 
 // error handler
-app.use((err, req, res, next) => {
+app.use(function (err, req, res) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get("env") === "development" ? err : {};
 
     // render the error page
     res.status(err.status || 500);
-    res.send("error");
+    res.render("error");
 });
 
 module.exports = app;
