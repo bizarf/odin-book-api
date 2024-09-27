@@ -25,7 +25,7 @@ app.use(compression());
 app.use(helmet());
 // cross origin resource sharing config
 let corsOptions;
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "development") {
     corsOptions = {
         origin: "http://localhost:5173",
         methods: ["GET", "POST", "PUT", "DELETE"],
