@@ -3,12 +3,10 @@ const app = require("../app");
 const request = supertest(app);
 const Post = require("../models/post");
 const Comment = require("../models/comment");
+const { describe, it, before, after } = require("mocha");
 const { expect } = require("chai");
 const agent = supertest.agent(app);
-const {
-    connectToDatabase,
-    disconnectDatabase,
-} = require("../middleware/mongoConfig");
+const { closeDatabase } = require("../utils/config");
 
 describe("comment test", () => {
     let postId;
@@ -19,9 +17,6 @@ describe("comment test", () => {
 
     // creates new mongo memory server before test
     before(async () => {
-        await disconnectDatabase();
-        process.env.NODE_ENV = "test";
-        await connectToDatabase();
         // create our test user
         await agent
             .post("/api/sign-up")
@@ -72,7 +67,7 @@ describe("comment test", () => {
 
     // disconnects and removes the memory server after test
     after(async () => {
-        await disconnectDatabase();
+        await closeDatabase();
     });
 
     it("returns a 401 Unauthorized error due to a lack of provided JWT", async () => {
@@ -141,8 +136,6 @@ describe("comment test", () => {
     });
 
     it("another user makes a comment", async () => {
-        await agent.get("/api/logout").expect(200);
-
         await agent
             .post("/api/login")
             .set("Content-Type", "application/json")
@@ -171,7 +164,6 @@ describe("comment test", () => {
         const pollyComment = await Comment.findOne({
             comment: "This is Polly's test comment",
         });
-        pollyId = pollyComment.user._id;
 
         expect(pollyComment).to.be.an("object");
         expect(pollyComment.comment).to.equal("This is Polly's test comment");
@@ -268,7 +260,6 @@ describe("comment test", () => {
     });
 
     it("user delete's their comment", async () => {
-        await agent.get("/api/logout").expect(200);
         await agent
             .post("/api/login")
             .set("Content-Type", "application/json")

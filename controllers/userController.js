@@ -14,7 +14,7 @@ exports.user_signup_post = [
         .escape()
         .notEmpty()
         .withMessage("You must enter a username")
-        .custom(async (value, { req, res }) => {
+        .custom(async (value) => {
             const userExists = await User.findOne({
                 username: value,
             }).exec();
@@ -37,15 +37,15 @@ exports.user_signup_post = [
         .isLength({ min: 8 })
         .withMessage("Your password must be at least 8 characters long")
         // custom validator to compare password and confirm password fields
-        .custom(async (value, { req, res }) => {
+        .custom(async (value, { req }) => {
             // wait for the password field or else there is no value to compare
             await req.body.password;
-            if (req.body.password != value) {
+            if (req.body.password !== value) {
                 throw new Error("The passwords don't match");
             }
         }),
 
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const errors = validationResult(req);
 
         bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
@@ -84,7 +84,7 @@ exports.user_login_post = [
         .escape()
         .notEmpty()
         .withMessage("You must enter a username")
-        .custom(async (value, { req, res }) => {
+        .custom(async (value) => {
             const userExists = await User.findOne({
                 username: value,
             }).exec();
@@ -128,7 +128,7 @@ exports.user_login_post = [
                                 const token = jwt.sign(
                                     { user: user._id },
                                     process.env.JWT_SECRET,
-                                    { expiresIn: "30d" }
+                                    { expiresIn: "1d" }
                                 );
                                 return res.json({ token });
                             }
@@ -167,51 +167,6 @@ exports.user_demo_login_post = asyncHandler((req, res, next) => {
     })(req, res, next);
 });
 
-// facebook login
-exports.user_facebook_login_get = asyncHandler((req, res, next) => {
-    passport.authenticate("facebook", (err, user, info) => {
-        if (err) {
-            console.log(err);
-        }
-    })(req, res, next);
-});
-
-// after an attempt to login on facebook's website, the user is sent back here
-exports.user_facebook_login_callback_get = asyncHandler((req, res, next) => {
-    passport.authenticate(
-        "facebook",
-        {
-            session: false,
-            failureRedirect: "/api/facebook-login",
-            // email scope didn't work. was supposed to get email address
-            // scope: ["email"],
-        },
-        (err, user, info) => {
-            if (err || !user) {
-                return res.status(401).json(info);
-            } else {
-                // login the user with passport js, and then create and send a jwt
-                req.login(user, { session: false }, (err) => {
-                    if (err) {
-                        return res.send(err);
-                    }
-                    const token = jwt.sign(
-                        { user: user._id },
-                        process.env.JWT_SECRET,
-                        {
-                            expiresIn: "30d",
-                        }
-                    );
-                    // res.json({ token });
-                    return res.redirect(
-                        `https://bizarf.github.io/odin-book-client/#/facebook-login?token=${token}`
-                    );
-                });
-            }
-        }
-    )(req, res, next);
-});
-
 // github login
 exports.user_github_login_get = asyncHandler((req, res, next) => {
     passport.authenticate("github", { scope: ["user:email"] })(req, res, next);
@@ -238,7 +193,7 @@ exports.user_github_login_callback_get = asyncHandler((req, res, next) => {
                         { user: user._id },
                         process.env.JWT_SECRET,
                         {
-                            expiresIn: "30d",
+                            expiresIn: "1d",
                         }
                     );
                     // res.json({ token });
@@ -251,13 +206,8 @@ exports.user_github_login_callback_get = asyncHandler((req, res, next) => {
     )(req, res, next);
 });
 
-exports.user_logout_get = asyncHandler((req, res, next) => {
-    res.clearCookie("jwt");
-    return res.json({ success: true, message: "Successfully logged out" });
-});
-
 // fetches the user details based on the id provided in the url params
-exports.user_profile_get = asyncHandler(async (req, res, next) => {
+exports.user_profile_get = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.userId)
         .select("-password")
         .exec();
@@ -280,13 +230,13 @@ exports.user_profile_update_put = [
         .escape()
         .notEmpty()
         .withMessage("You must enter a username")
-        .custom(async (value, { req, res }) => {
+        .custom(async (value, { req }) => {
             const user = await User.findById(req.params.userId).exec();
             const userExists = await User.findOne({
                 username: value,
             }).exec();
 
-            if (userExists && user.username != value) {
+            if (userExists && user.username !== value) {
                 throw new Error("User already exists");
             }
         }),
@@ -299,7 +249,7 @@ exports.user_profile_update_put = [
         .isURL()
         .withMessage("Invalid URL"),
 
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const errors = validationResult(req);
 
         const user = await User.findById(req.params.userId).exec();

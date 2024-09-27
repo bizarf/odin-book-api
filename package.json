@@ -3,41 +3,47 @@
     "version": "1.0.0",
     "author": "Tony Hoong (https://github.com/bizarf)",
     "engines": {
-        "node": "18.18.0"
+        "node": "20.15.1"
     },
     "private": true,
     "scripts": {
-        "start": "node ./bin/www",
-        "test": "mocha --recursive --timeout 5000",
-        "devstart": "nodemon ./bin/www",
-        "serverstart": "DEBUG=odin-book-api:* npm run devstart"
+        "start": "cross-env NODE_ENV=production node ./index.js",
+        "dev": "cross-env NODE_ENV=development nodemon ./index.js",
+        "test": "cross-env NODE_ENV=development mocha --timeout 5000"
     },
     "dependencies": {
-        "bcrypt": "^5.1.0",
+        "bcrypt": "^5.1.1",
         "compression": "^1.7.4",
         "cookie-parser": "~1.4.6",
         "cors": "^2.8.5",
-        "debug": "~4.3.4",
-        "dotenv": "^16.3.1",
-        "express": "~4.18.2",
+        "debug": "~4.3.7",
+        "dotenv": "^16.4.5",
+        "express": "~4.21.0",
         "express-async-handler": "^1.2.0",
-        "express-rate-limit": "^6.7.1",
-        "express-validator": "^7.0.1",
-        "helmet": "^7.0.0",
+        "express-rate-limit": "^7.4.0",
+        "express-validator": "^7.2.0",
+        "helmet": "^7.1.0",
         "http-errors": "~2.0.0",
-        "jsonwebtoken": "^9.0.1",
-        "mongoose": "^7.3.4",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.6.3",
         "morgan": "~1.10.0",
-        "passport": "^0.6.0",
-        "passport-facebook": "^3.0.0",
+        "passport": "^0.7.0",
         "passport-github2": "^0.1.12",
         "passport-jwt": "^4.0.1",
         "passport-local": "^1.0.0"
     },
     "devDependencies": {
-        "chai": "^4.3.7",
-        "mocha": "^10.2.0",
-        "mongodb-memory-server": "^8.13.0",
-        "supertest": "^6.3.3"
+        "@eslint/js": "^9.11.1",
+        "chai": "^4.5.0",
+        "cross-env": "^7.0.3",
+        "eslint": "^9.11.1",
+        "eslint-config-prettier": "^9.1.0",
+        "globals": "^15.9.0",
+        "mocha": "^10.7.3",
+        "mongodb-memory-server": "^10.0.1",
+        "nodemon": "^3.1.7",
+        "prettier": "3.3.3",
+        "supertest": "^7.0.0",
+        "vitest": "^2.1.1"
     }
 }

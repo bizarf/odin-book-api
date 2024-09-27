@@ -11,7 +11,7 @@ exports.comment_create_post = [
         .blacklist("<>&/")
         .notEmpty(),
 
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const errors = validationResult(req);
 
         const comment = new Comment({
@@ -43,7 +43,7 @@ exports.comment_create_post = [
 ];
 
 // gets all comments for current post
-exports.comments_get = asyncHandler(async (req, res, next) => {
+exports.comments_get = asyncHandler(async (req, res) => {
     // check the post exists
     const post = await Post.findById(req.params.id).exec();
     if (post === null) {
@@ -61,7 +61,7 @@ exports.comments_get = asyncHandler(async (req, res, next) => {
 });
 
 // deletes comment
-exports.comment_delete = asyncHandler(async (req, res, next) => {
+exports.comment_delete = asyncHandler(async (req, res) => {
     const post = await Post.findById(req.params.id).exec();
     if (!post) {
         return res
@@ -99,7 +99,7 @@ exports.comment_edit_put = [
         .blacklist("<>&/")
         .notEmpty(),
 
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const errors = validationResult(req);
 
         // check if comment exists first
@@ -151,7 +151,7 @@ exports.comment_edit_put = [
 ];
 
 // like comment
-exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
+exports.comment_like_toggle_put = asyncHandler(async (req, res) => {
     const comment = await Comment.findOne({
         _id: req.params.commentId,
         postId: req.params.id,
@@ -165,7 +165,7 @@ exports.comment_like_toggle_put = asyncHandler(async (req, res, next) => {
         .map((id) => id.toString())
         .filter((id) => id === req.user._id.toString());
 
-    if (likedByCheck.length === 0 && likedByCheck[0] != req.user._id) {
+    if (likedByCheck.length === 0 && likedByCheck[0] !== req.user._id) {
         // user adds a like to the comment
         const addLike = await Comment.findOneAndUpdate(
             {
